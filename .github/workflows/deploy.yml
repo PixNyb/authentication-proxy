@@ -27,4 +27,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: pixnyb/code:latest
+          tags: pixnyb/code:authentication-proxy
