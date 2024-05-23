@@ -18,6 +18,8 @@ COPY config/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 80
-
 ENTRYPOINT ["/entrypoint.sh"]
+
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=15 CMD curl -f http://localhost:80/login || exit 1
+
+EXPOSE 80
