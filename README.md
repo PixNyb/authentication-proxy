@@ -42,6 +42,8 @@ When running the container, you can pass the following environment variables to 
 - `COOKIE_PREFIX`: The prefix for the cookie name. (Optional, default: ``)
 - `AUTHORISED_USERS`: A list of authorised users in the format `username:password-md5` delimited by a comma. (Optional)
 - `AUTHORIZED_USERS_FILE`: The path to a file containing authorised users in the format `username:password-md5` *Same format as a `.htpasswd` file*. (Optional)
+- `PAGE_SERVICE_NAME`: The name of the service to use for the page, will be displayed on the login page. (Optional, default: `this service`)
+- `PAGE_ADMINISTRATOR_EMAIL`: The email of the administrator, will be displayed on the login page. (Optional, default: ``)
 
 > [!NOTE]
 > The `AUTHORISED_USERS` and `AUTHORIZED_USERS_FILE` environment variables are mutually exclusive. You can only use one of them at a time. If both are provided, the `AUTHORIZED_USERS_FILE` variable will take precedence.

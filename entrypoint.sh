@@ -17,10 +17,19 @@ if [ -n "$API_PATH" ]; then
 fi
 
 export API_PATH
+export PAGE_SERVICE_NAME="${PAGE_SERVICE_NAME:-this service}"
+
+# If there PAGE_ADMINISTRATOR_EMAIL is not set, set the PAGE_ADMINISTRATOR_TEXT to "Contact the administrator"
+if [ -z "$PAGE_ADMINISTRATOR_EMAIL" ]; then
+  export PAGE_ADMINISTRATOR_EMAIL=""
+  export PAGE_ADMINISTRATOR_TEXT="Contact the administrator"
+else
+  export PAGE_ADMINISTRATOR_TEXT="Contact the administrator at <a href='mailto:$PAGE_ADMINISTRATOR_EMAIL'>$PAGE_ADMINISTRATOR_EMAIL</a>"
+fi
 
 # Substitute environment variables in the NGINX configuration template
 envsubst '$UPSTREAM_HOST $UPSTREAM_PORT $API_PATH' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
-envsubst '$UPSTREAM_HOST $UPSTREAM_PORT $API_PATH' < /usr/share/nginx/html/login.html.template > /usr/share/nginx/html/login.html
+envsubst '$UPSTREAM_HOST $UPSTREAM_PORT $API_PATH $PAGE_SERVICE_NAME $PAGE_ADMINISTRATOR_TEXT' < /usr/share/nginx/html/login.html.template > /usr/share/nginx/html/login.html
 
 # Start Supervisor
 /usr/bin/supervisord
