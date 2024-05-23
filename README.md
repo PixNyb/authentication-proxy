@@ -35,14 +35,20 @@ When running the container, you can pass the following environment variables to 
 - `UPSTREAM_HOST`: The host to proxy requests to. (Required)
 - `UPSTREAM_PORT`: The port to proxy requests to. (Required)
 - `ACCESS_TOKEN_SECRET`: The secret key to use for signing the access token. (Required)
+- `ACCESS_TOKEN_LIFETIME`: The lifetime of the access token in seconds. (Optional, default: `15m`)
 - `REFRESH_TOKEN_SECRET`: The secret key to use for signing the refresh token. (Required)
+- `REFRESH_TOKEN_LIFETIME`: The lifetime of the refresh token in seconds. (Optional, default: `7d`)
 - `API_PATH`: The prefix path for the API. (Optional, default: `/`)
 - `COOKIE_PREFIX`: The prefix for the cookie name. (Optional, default: ``)
-- `AUTHORISED_USERS`: A list of authorised users in the format `username:password-hash` delimited by a comma. (Optional)
-- `AUTHORIZED_USERS_FILE`: The path to a file containing authorised users in the format `username:password-hash` *Same format as a `.htpasswd` file*. (Optional)
+- `AUTHORISED_USERS`: A list of authorised users in the format `username:password-md5` delimited by a comma. (Optional)
+- `AUTHORIZED_USERS_FILE`: The path to a file containing authorised users in the format `username:password-md5` *Same format as a `.htpasswd` file*. (Optional)
 
 > [!NOTE]
 > The `AUTHORISED_USERS` and `AUTHORIZED_USERS_FILE` environment variables are mutually exclusive. You can only use one of them at a time. If both are provided, the `AUTHORIZED_USERS_FILE` variable will take precedence.
+
+#### Prometheus Metrics
+
+The authentication proxy exposes Prometheus metrics on the `$API_PATH/metrics` endpoint.
 
 ## Example
 
