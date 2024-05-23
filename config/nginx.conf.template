@@ -1,0 +1,69 @@
+worker_processes 1;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen 80;
+        default_type text/html;
+        error_log /var/log/nginx/error.log debug;
+
+        location $API_PATH/login {
+            alias /usr/share/nginx/html/login.html;
+        }
+
+        location $API_PATH/auth {
+            proxy_pass http://127.0.0.1:3000/auth;
+        }
+
+        location $API_PATH/validate {
+            proxy_pass http://127.0.0.1:3000/validate;
+        }
+
+        location $API_PATH/refresh {
+            proxy_pass http://127.0.0.1:3000/refresh;
+        }
+
+        location / {
+            auth_request $API_PATH/validate;
+            auth_request_set $auth_status $upstream_status;
+
+            error_page 401 = $API_PATH/login?uri=$request_uri;
+            error_page 403 = $API_PATH/refresh?uri=$request_uri;
+
+            add_header Access-Control-Allow-Origin '*';
+            add_header Content-Security-Policy 'upgrade-insecure-requests';
+            add_header Referrer-Policy 'no-referrer-when-downgrade';
+            add_header X-Frame-Options 'SAMEORIGIN';
+            add_header X-XSS-Protection '1; mode=block';
+            add_header X-Content-Type-Options 'nosniff';
+            add_header X-Content-Security-Policy 'upgrade-insecure-requests';
+            add_header X-WebKit-CSP 'upgrade-insecure-requests';
+            add_header Cache-Control 'no-store';
+            add_header Cache-Control 'no-cache';
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Host $http_x_forwarded_host;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection upgrade;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Accept-Encoding gzip;
+
+            proxy_hide_header Access-Control-Allow-Origin;
+
+            proxy_pass_header Authorization;
+
+            proxy_read_timeout 90;
+            proxy_http_version 1.1;
+
+            proxy_pass http://$UPSTREAM_HOST:$UPSTREAM_PORT; # Replace with your environment variable
+            proxy_redirect http://$UPSTREAM_HOST:$UPSTREAM_PORT/ $scheme://$http_x_forwarded_host;
+
+            expires 0;
+        }
+    }
+}
