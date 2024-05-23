@@ -27,4 +27,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: pixnyb/code:authentication-proxy
+          tags: |
+            pixnyb/authentication-proxy:latest
+            pixnyb/authentication-proxy:${{ github.sha }}
