@@ -31,5 +31,11 @@ fi
 envsubst '$UPSTREAM_HOST $UPSTREAM_PORT $API_PATH' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
 envsubst '$UPSTREAM_HOST $UPSTREAM_PORT $API_PATH $PAGE_SERVICE_NAME $PAGE_ADMINISTRATOR_TEXT' < /usr/share/nginx/html/login.html.template > /usr/share/nginx/html/login.html
 
+# Wait for the upstream service to be available
+echo "Waiting for upstream to be available..."
+while ! curl -s $UPSTREAM_HOST:$UPSTREAM_PORT > /dev/null; do
+  sleep 5
+done
+
 # Start Supervisor
 /usr/bin/supervisord

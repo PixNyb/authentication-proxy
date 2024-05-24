@@ -11,6 +11,7 @@ const app = express();
 const metricsMiddleware = promBundle({ includeMethod: true, includePath: true });
 app.use(metricsMiddleware);
 
+app.use(express.json())
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -33,32 +34,33 @@ authorisedUsers.forEach(user => {
 });
 
 app.use((req, res, next) => {
-    console.log(`${req.method} ${req.url}`);
+    console.log(`[${new Date().toISOString()}] - ${req.method} ${req.url}`);
     next();
 });
 
 app.post(`${apiPath}/auth`, (req, res) => {
     const { username, password } = req.body;
+    if (!username || !password) return res.send(400).send({ message: 'Missing username or password' });
+
     const hash = userCredentials[username];
     if (hash === apacheMd5(password, hash)) {
         const accessToken = jwt.sign({ username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: accessTokenLifetime });
         const refreshToken = jwt.sign({ username }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: refreshTokenLifetime });
 
-        res.cookie(`${cookiePrefix}access_token`, accessToken, { httpOnly: true, maxAge: tokenTimeToMilliseconds(accessTokenLifetime) });
-        res.cookie(`${cookiePrefix}refresh_token`, refreshToken, { httpOnly: true, maxAge: tokenTimeToMilliseconds(refreshTokenLifetime) });
+        res.cookie(`${cookiePrefix}access_token`, accessToken, { httpOnly: true, maxAge: tokenTimeToMilliseconds(accessTokenLifetime), sameSite: 'strict' });
+        res.cookie(`${cookiePrefix}refresh_token`, refreshToken, { httpOnly: true, maxAge: tokenTimeToMilliseconds(refreshTokenLifetime), sameSite: 'strict' });
 
-        res.redirect(req.query.uri || '/');
+        res.status(200).send({ message: 'Successfully authenticated' });
     } else {
-        res.status(401).redirect(req.query.uri || '/');
+        res.status(401).send({ message: 'Invalid credentials' });
     }
 });
 
 app.get(`${apiPath}/validate`, (req, res) => {
-    console.debug(req);
     const token = req.cookies[`${cookiePrefix}access_token`]
     if (!token) return res.sendStatus(401);
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
-        if (err) return res.sendStatus(403);
+        if (err) return res.sendStatus(401);
 
         res.sendStatus(200);
     });
@@ -66,15 +68,17 @@ app.get(`${apiPath}/validate`, (req, res) => {
 
 app.get(`${apiPath}/refresh`, (req, res) => {
     const refreshToken = req.cookies[`${cookiePrefix}refresh_token`]
+    console.log('Refresh token:', refreshToken);
+    console.log('URI:', req.query.uri)
     if (!refreshToken) return res.sendStatus(401);
     jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, user) => {
         if (err) return res.sendStatus(403);
 
         const accessToken = jwt.sign({ username: user.username }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: accessTokenLifetime });
 
-        res.cookie(`${cookiePrefix}access_token`, accessToken, { httpOnly: true });
+        res.cookie(`${cookiePrefix}access_token`, accessToken, { httpOnly: true, maxAge: tokenTimeToMilliseconds(accessTokenLifetime), sameSite: 'strict' });
 
-        res.sendStatus(200);
+        res.status(200).redirect(req.query.uri);
     });
 });
 
