@@ -216,38 +216,34 @@
 
 <script>
     const form = document.getElementById('login');
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();
-        if (!form.checkValidity())
-            return;
-
-        fetch(`$API_PATH/auth?uri=${window.location.href}`, {
-            method: 'POST',
-            body: new URLSearchParams(new FormData(form)),
-        })
-        .then(response => {
-            const json = response.json();
-
-            if (response.ok) {
-                document.body.classList.add('success');
-                setTimeout(() => {
-                    window.location.reload();
-                }, 400);
-            } else
-                setError(json.message);
-        })
-        .catch(error => {
-            setError('An error occurred while trying to log in. Please try again later.');
-        });
-    });
-
-    function setError(message) {
+    const url = new URL('$API_PATH/auth', window.location.href);
+    const setError = message => {
         form.setAttribute('data-error', message);
-
         form.addEventListener('input', function() {
             form.removeAttribute('data-error');
             form.removeEventListener('input', this);
         });
-    }
+    };
+
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (!form.checkValidity()) return;
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                body: new URLSearchParams(new FormData(form)),
+            });
+
+            if (!response.ok)
+                throw new Error(await response.text());
+
+            document.body.classList.add('success');
+            setTimeout(() => window.location.reload(), 400);
+        } catch (error) {
+            console.error(error);
+            setError(error.message || 'An error occurred while trying to log in. Please try again later.');
+        }
+    });
 </script>
 </html>

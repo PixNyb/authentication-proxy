@@ -40,7 +40,7 @@ app.use((req, res, next) => {
 
 app.post(`${apiPath}/auth`, (req, res) => {
     const { username, password } = req.body;
-    if (!username || !password) return res.send(400).send({ message: 'Missing username or password' });
+    if (!username || !password) return res.send(400).send('Missing username or password');
 
     const hash = userCredentials[username];
     if (hash === apacheMd5(password, hash)) {
@@ -50,9 +50,9 @@ app.post(`${apiPath}/auth`, (req, res) => {
         res.cookie(`${cookiePrefix}access_token`, accessToken, { httpOnly: true, maxAge: tokenTimeToMilliseconds(accessTokenLifetime), sameSite: 'strict' });
         res.cookie(`${cookiePrefix}refresh_token`, refreshToken, { httpOnly: true, maxAge: tokenTimeToMilliseconds(refreshTokenLifetime), sameSite: 'strict' });
 
-        res.status(200).send({ message: 'Successfully authenticated' });
+        res.status(200).send('Successfully authenticated');
     } else {
-        res.status(401).send({ message: 'Invalid credentials' });
+        res.status(401).send('Invalid credentials');
     }
 });
 
