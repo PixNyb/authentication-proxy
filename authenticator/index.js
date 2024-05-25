@@ -58,7 +58,9 @@ app.post(`${apiPath}/auth`, (req, res) => {
 
 app.get(`${apiPath}/validate`, (req, res) => {
     const token = req.cookies[`${cookiePrefix}access_token`]
-    if (!token) return res.sendStatus(401);
+    const refreshToken = req.cookies[`${cookiePrefix}refresh_token`]
+    if (!token && !refreshToken) return res.sendStatus(401);
+    if (!token) return res.sendStatus(403);
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
         if (err) return res.sendStatus(401);
 
