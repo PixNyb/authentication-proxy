@@ -125,6 +125,9 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
 });
 
 app.get(`${AUTH_PREFIX}/`, (req, res) => {
+    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+        return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`);
+
     const {
         [ACCESS_TOKEN_NAME]: token,
         [REFRESH_TOKEN_NAME]: refreshToken
@@ -150,9 +153,6 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
     } catch (e) {
         req.session.redirect = req.query.redirect_url || `${req.protocol}://${req.headers.host}${req.forwardedUri || ''}`;
 
-        if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-            return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`);
-
         res.status(401).render('form', {
             title: FORM_TITLE || 'Login',
             strategies: templateStrategies,
@@ -161,6 +161,11 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
             admin_text: FORM_ADMIN_EMAIL ? `Please contact the administrator at <a href="mailto:${FORM_ADMIN_EMAIL}">${FORM_ADMIN_EMAIL}</a> for access.` : 'You\'re on your own!',
         });
     }
+});
+
+// Catch all route
+app.use((req, res) => {
+    res.status(404).send('Not Found');
 });
 
 app.listen(3000, '0.0.0.0', () => {

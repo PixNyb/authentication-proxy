@@ -6,7 +6,7 @@ function parseBoolean(str) {
 
 module.exports = {
     AUTH_PREFIX: process.env.AUTH_PREFIX || '',
-    AUTH_HOST: process.env.AUTH_HOST || 'http://localhost',
+    AUTH_HOST: process.env.AUTH_HOST || 'localhost',
 
     // JWT tokens
     ACCESS_TOKEN_NAME: process.env.ACCESS_TOKEN_NAME || '_access_token',
