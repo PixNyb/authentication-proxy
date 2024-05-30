@@ -92,7 +92,7 @@ app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
     if (AUTH_HOST && req.headers.host !== AUTH_HOST)
         return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
 
-    const {
+    let {
         [REFRESH_TOKEN_NAME]: refreshToken
     } = req.cookies;
 
@@ -133,6 +133,9 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
     if (AUTH_HOST && req.headers.host !== AUTH_HOST)
         return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
 
+    delete req.session.token;
+    delete req.session.refreshToken;
+
     removeGlobalCookies(req, res, `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`, [
         { name: ACCESS_TOKEN_NAME, options: COOKIE_CONFIG },
         { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
@@ -140,7 +143,7 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
 });
 
 app.get(`${AUTH_PREFIX}/`, (req, res) => {
-    const {
+    let {
         [ACCESS_TOKEN_NAME]: token,
         [REFRESH_TOKEN_NAME]: refreshToken
     } = req.cookies;
