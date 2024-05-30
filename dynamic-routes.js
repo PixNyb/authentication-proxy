@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const passport = require('passport');
-const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET, ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, AUTH_HOST, AUTH_PREFIX, COOKIE_CONFIG, COOKIE_DOMAIN } = require('./constants');
+const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET, ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, AUTH_HOST, AUTH_PREFIX, COOKIE_CONFIG, COOKIE_HOSTS } = require('./constants');
 const { path } = require('./app');
 
 const setCookieForMultipleDomains = (req, res, token, refreshToken, redirectUrl) => {
@@ -12,11 +12,14 @@ const setCookieForMultipleDomains = (req, res, token, refreshToken, redirectUrl)
         { name: REFRESH_TOKEN_NAME, value: refreshToken, options: { maxAge: 1000 * 60 * 60 * 24 * 7, ...COOKIE_CONFIG } }
     ];
 
-    const cookieUrls = COOKIE_DOMAIN.map((domain, index) => {
+    console.log('Setting cookies:', cookies);
+    console.log('Hosts:', COOKIE_HOSTS);
+
+    const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
         const url = new URL('/set-cookies', `${protocol}://${domain}`);
         url.searchParams.append('token', token);
         url.searchParams.append('refreshToken', refreshToken);
-        if (index === COOKIE_DOMAIN.length - 1) {
+        if (index === COOKIE_HOSTS.length - 1) {
             url.searchParams.append('redirect_url', redirectUrl);
         }
         return url.toString();

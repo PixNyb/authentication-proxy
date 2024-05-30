@@ -21,6 +21,6 @@ module.exports = {
         path: '/',
     },
 
-    COOKIE_HOSTS: process.env.COOKIE_HOSTS ? process.env.COOKIE_HOSTS.split(',') : [ this.AUTH_HOST ],
+    COOKIE_HOSTS: process.env.COOKIE_HOSTS ? process.env.COOKIE_HOSTS.split(',') : [ process.env.AUTH_HOST || 'localhost' ],
     COOKIE_HOSTS_USE_ROOT: parseBoolean(process.env.COOKIE_HOSTS_USE_ROOT) || false,
 }
