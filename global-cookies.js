@@ -1,10 +1,10 @@
-const { COOKIE_HOSTS, COOKIE_HOSTS_USE_ROOT } = require("./constants");
+const { COOKIE_HOSTS, COOKIE_HOSTS_USE_ROOT, AUTH_HOST, AUTH_PREFIX } = require("./constants");
 
 const setGlobalCookies = (req, res, redirectUrl, cookies) => {
     const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
         const url = new URL('/set-cookies', `${req.protocol}://${domain}`);
         url.searchParams.append('c', JSON.stringify(cookies));
-        url.searchParams.append('u', redirectUrl);
+        url.searchParams.append('u', `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirectUrl}`);
         url.searchParams.append('i', index);
 
         return url.toString();
