@@ -4,8 +4,8 @@ const setGlobalCookies = (req, res, redirectUrl, cookies) => {
     const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
         const url = new URL('/set-cookies', `${req.protocol}://${domain}`);
         url.searchParams.append('c', JSON.stringify(cookies));
-        url.searchParams.append('i', index);
         url.searchParams.append('u', redirectUrl);
+        url.searchParams.append('i', index);
 
         return url.toString();
     });
@@ -21,8 +21,8 @@ const removeGlobalCookies = (req, res, redirectUrl, cookies) => {
     const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
         const url = new URL('/remove-cookies', `${req.protocol}://${domain}`);
         url.searchParams.append('c', JSON.stringify(cookies));
-        url.searchParams.append('i', index);
         url.searchParams.append('u', redirectUrl);
+        url.searchParams.append('i', index);
 
         return url.toString();
     });
@@ -54,9 +54,9 @@ const createCookieRoutes = (app) => {
             });
         });
 
-        if (redirect_url && index == COOKIE_HOSTS.length - 1) {
+        if (index == COOKIE_HOSTS.length - 1) {
             res.status(200).render('redirect', {
-                redirectUrl: redirect_url
+                redirectUrl: redirect_url || '/'
             });
         } else {
             const next_domain = COOKIE_HOSTS[index + 1];
@@ -72,7 +72,7 @@ const createCookieRoutes = (app) => {
     });
 
     app.get('/remove-cookies', (req, res) => {
-        const { c, u, i } = req.query; // c = cookies, u = redirect_url, i = index, n = next domain
+        const { c, u, i } = req.query; // c = cookies, u = redirect_url, i = index
         const index = parseInt(i);
         const cookies = JSON.parse(c);
         const redirect_url = u;
@@ -90,9 +90,9 @@ const createCookieRoutes = (app) => {
             });
         });
 
-        if (redirect_url && index == COOKIE_HOSTS.length - 1) {
+        if (index == COOKIE_HOSTS.length - 1) {
             res.status(200).render('redirect', {
-                redirectUrl: redirect_url
+                redirectUrl: redirect_url || '/'
             });
         } else {
             const next_domain = COOKIE_HOSTS[index + 1];
