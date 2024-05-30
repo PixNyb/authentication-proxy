@@ -7,7 +7,7 @@ const passport = require('./passport-setup');
 const session = require('express-session');
 const strategies = require('./strategies');
 const createRoutes = require('./dynamic-routes');
-const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET, COOKIE_DOMAIN_USE_ROOT, COOKIE_HOSTS } = require('./constants');
+const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET, COOKIE_HOSTS_USE_ROOT, COOKIE_HOSTS } = require('./constants');
 
 const { FORM_TITLE, FORM_ADMIN_EMAIL, SESSION_SECRET } = process.env;
 const metricsMiddleware = promBundle({ includeMethod: true, includePath: true });
@@ -174,10 +174,10 @@ app.get('/set-cookies', (req, res) => {
     }
 
     let domain = req.hostname;
-    if (COOKIE_DOMAIN_USE_ROOT)
+    if (COOKIE_HOSTS_USE_ROOT)
         domain = "." + req.hostname.split('.').slice(parts.length - 2).join('.');
 
-    console.log('Domain:', domain, COOKIE_DOMAIN_USE_ROOT);
+    console.log('Domain:', domain, COOKIE_HOSTS_USE_ROOT);
 
     res.cookie(ACCESS_TOKEN_NAME, token, {
         maxAge: 1000 * 60 * 15,
@@ -191,8 +191,6 @@ app.get('/set-cookies', (req, res) => {
         domain
     });
 
-    // use the COOKIE_DOMAINS variable to figure out the next domain to redirect to
-    // First find the index of the current domain
     if (redirect_url && index == COOKIE_HOSTS.length - 1) {
         res.status(200).render('redirect', {
             redirectUrl: redirect_url
