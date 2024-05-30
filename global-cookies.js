@@ -36,7 +36,7 @@ const removeGlobalCookies = (req, res, redirectUrl, cookies) => {
 
 const createCookieRoutes = (app) => {
     app.get('/set-cookies', (req, res) => {
-        const { c, u, i } = req.query; // c = cookies, u = redirect_url, i = index, n = next domain
+        const { c, u, i } = req.query; // c = cookies, u = redirect_url, i = index
         const index = parseInt(i);
         const cookies = JSON.parse(c);
         const redirect_url = u;
@@ -64,8 +64,6 @@ const createCookieRoutes = (app) => {
             url.searchParams.append('c', c);
             url.searchParams.append('i', index + 1);
             url.searchParams.append('u', u);
-            if (index < COOKIE_HOSTS.length)
-                url.searchParams.append('n', COOKIE_HOSTS[index + 1]);
 
             res.status(200).render('redirect', {
                 redirectUrl: url.toString()
@@ -102,8 +100,6 @@ const createCookieRoutes = (app) => {
             url.searchParams.append('c', c);
             url.searchParams.append('i', index + 1);
             url.searchParams.append('u', u);
-            if (index < COOKIE_HOSTS.length)
-                url.searchParams.append('n', COOKIE_HOSTS[index + 1]);
 
             res.status(200).render('redirect', {
                 redirectUrl: url.toString()

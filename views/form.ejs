@@ -246,7 +246,7 @@
     </style>
 </head>
 <body>
-    <form id="login">
+    <form id="login" method="post" action="<%- initialEndpoint %>">
         <% if (initialEndpoint) { %>
             <main>
                 <h1>
@@ -316,59 +316,11 @@
 <script>
     const form = document.getElementById('login');
     const endpoint = document.getElementById('endpoint');
-    let url = new URL("<%- initialEndpoint %>", window.location.href);
-
-    const setError = message => {
-        form.setAttribute('data-error', message);
-        form.addEventListener('input', function() {
-            form.removeAttribute('data-error');
-            form.removeEventListener('input', this);
-        });
-    };
-
-    // If there's an error message in the URL, display it
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('error')) {
-        setError(urlParams.get('error'));
-        window.history.replaceState({}, document.title, window.location.pathname);
-    }
 
     if (endpoint)
         endpoint.addEventListener('change', () => {
             url = new URL(endpoint.value, window.location.href);
+            form.setAttribute('action', url.href);
         });
-
-    form.addEventListener('submit', async event => {
-        event.preventDefault();
-        if (!form.checkValidity()) return;
-
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                body: new URLSearchParams(new FormData(form)),
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            if (!response.ok)
-                throw new Error(await response.text());
-
-            document.body.classList.add('success');
-            setTimeout(() => window.location.reload(), 400);
-        } catch (error) {
-            console.error(error);
-            let errorMessage = 'An error occurred while trying to log in. Please try again later.';
-
-            try {
-                const json = JSON.parse(error.message);
-                errorMessage = json.message;
-            } catch (e) {
-                console.error(e);
-            }
-
-            setError(errorMessage);
-        }
-    });
 </script>
 </html>
