@@ -6,8 +6,9 @@ const promBundle = require('express-prom-bundle');
 const passport = require('./passport-setup');
 const session = require('express-session');
 const strategies = require('./strategies');
-const createRoutes = require('./dynamic-routes');
+const createProviderRoutes = require('./dynamic-routes');
 const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET, COOKIE_HOSTS_USE_ROOT, COOKIE_HOSTS } = require('./constants');
+const { removeGlobalCookies, setGlobalCookies, createCookieRoutes } = require('./global-cookies');
 
 const { FORM_TITLE, FORM_ADMIN_EMAIL, SESSION_SECRET } = process.env;
 const metricsMiddleware = promBundle({ includeMethod: true, includePath: true });
@@ -56,9 +57,15 @@ app.use((req, res, next) => {
 });
 
 try {
-    createRoutes(app, strategies);
+    createProviderRoutes(app, strategies);
 } catch (e) {
     console.error('Failed to create routes:', e);
+}
+
+try {
+    createCookieRoutes(app);
+} catch (e) {
+    console.error('Failed to create cookie routes:', e);
 }
 
 const templateStrategies = Object.entries(strategies).filter(([id, strategyConfig]) => strategyConfig.type !== 'local').map(([id, strategyConfig]) => {
@@ -99,15 +106,16 @@ app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
             ACCESS_TOKEN_SECRET, { expiresIn: '15m' }
         );
 
-        res.cookie(ACCESS_TOKEN_NAME, token, {
-            maxAge: 1000 * 60 * 15,
-            ...COOKIE_CONFIG
-        });
+        setGlobalCookies(req, res, `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`, [
+            { name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG },
+        ]);
 
         res.status(200).json({ token });
     } catch (e) {
         // Remove the refresh token cookie if it's invalid
-        res.clearCookie(REFRESH_TOKEN_NAME, COOKIE_CONFIG);
+        removeGlobalCookies(req, res, `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`, [
+            { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
+        ]);
 
         res.status(401).render('redirect', {
             redirectUrl: `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`
@@ -119,9 +127,10 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
     if (AUTH_HOST && req.headers.host !== AUTH_HOST)
         return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
 
-    res.clearCookie(ACCESS_TOKEN_NAME, COOKIE_CONFIG);
-    res.clearCookie(REFRESH_TOKEN_NAME, COOKIE_CONFIG);
-    res.status(301).redirect('/');
+    removeGlobalCookies(req, res, `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`, [
+        { name: ACCESS_TOKEN_NAME, options: COOKIE_CONFIG },
+        { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
+    ]);
 });
 
 app.get(`${AUTH_PREFIX}/`, (req, res) => {
@@ -159,49 +168,6 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
             endpoints: localEndpoints,
             initialEndpoint: localEndpoints[0] ? localEndpoints[0].loginURL : null,
             admin_text: FORM_ADMIN_EMAIL ? `Please contact the administrator at <a href="mailto:${FORM_ADMIN_EMAIL}">${FORM_ADMIN_EMAIL}</a> for access.` : 'You\'re on your own!',
-        });
-    }
-});
-
-app.get('/set-cookies', (req, res) => {
-    const { token, refreshToken, redirect_url, i } = req.query;
-    const index = parseInt(i);
-
-    console.log('Setting cookies:', req.query);
-
-    if (!token || !refreshToken) {
-        return res.status(400).send('Missing token or refreshToken');
-    }
-
-    let domain = req.hostname;
-    if (COOKIE_HOSTS_USE_ROOT) {
-        let parts = req.hostname.split('.');
-        domain = "." + parts.slice(parts.length - 2).join('.');
-    }
-
-    console.log('Domain:', domain, COOKIE_HOSTS_USE_ROOT);
-
-    res.cookie(ACCESS_TOKEN_NAME, token, {
-        maxAge: 1000 * 60 * 15,
-        ...COOKIE_CONFIG,
-        domain
-    });
-
-    res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
-        maxAge: 1000 * 60 * 60 * 24 * 7,
-        ...COOKIE_CONFIG,
-        domain
-    });
-
-    if (redirect_url && index == COOKIE_HOSTS.length - 1) {
-        res.status(200).render('redirect', {
-            redirectUrl: redirect_url
-        });
-    } else {
-        const next_domain = COOKIE_HOSTS[index + 1];
-        console.log(next_domain, index + 1, COOKIE_HOSTS.length - 1)
-        res.status(200).render('redirect', {
-            redirectUrl: `http://${next_domain}/set-cookies?token=${token}&refreshToken=${refreshToken}&redirect_url=${redirect_url}&i=${index + 1}`
         });
     }
 });

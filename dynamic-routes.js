@@ -3,34 +3,9 @@ const express = require('express');
 const passport = require('passport');
 const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET, ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, AUTH_HOST, AUTH_PREFIX, COOKIE_CONFIG, COOKIE_HOSTS } = require('./constants');
 const { path } = require('./app');
+const { setGlobalCookies } = require('./global-cookies');
 
-const setCookieForMultipleDomains = (req, res, token, refreshToken, redirectUrl) => {
-    const protocol = req.protocol;
-
-    const cookies = [
-        { name: ACCESS_TOKEN_NAME, value: token, options: { maxAge: 1000 * 60 * 15, ...COOKIE_CONFIG } },
-        { name: REFRESH_TOKEN_NAME, value: refreshToken, options: { maxAge: 1000 * 60 * 60 * 24 * 7, ...COOKIE_CONFIG } }
-    ];
-
-    console.log('Setting cookies:', cookies);
-    console.log('Hosts:', COOKIE_HOSTS);
-
-    const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
-        const url = new URL('/set-cookies', `${protocol}://${domain}`);
-        url.searchParams.append('token', token);
-        url.searchParams.append('refreshToken', refreshToken);
-        url.searchParams.append('i', index);
-        url.searchParams.append('redirect_url', redirectUrl);
-        if (index < COOKIE_HOSTS.length)
-            url.searchParams.append('next_domain', COOKIE_HOSTS[index + 1]);
-
-        return url.toString();
-    });
-
-    return { cookies, cookieUrls };
-};
-
-const createRoutes = (app, strategies) => {
+const createProviderRoutes = (app, strategies) => {
     const authMiddleware = (req, res, next) => {
         const bypassRoutes = Object.values(strategies).map(strategy => strategy.params.loginURL).concat(
             Object.values(strategies).map(strategy => strategy.params.callbackURL)
@@ -124,13 +99,10 @@ const createRoutes = (app, strategies) => {
                             REFRESH_TOKEN_SECRET, { expiresIn: '7d' }
                         );
 
-                        const { cookieUrls } = setCookieForMultipleDomains(req, res, token, refreshToken, redirectUrl);
-
-                        if (req.xhr) {
-                            res.status(200).json({ cookieUrls });
-                        } else {
-                            res.status(301).redirect(cookieUrls[0]);
-                        }
+                        setGlobalCookies(req, res, redirectUrl, [
+                            { name: ACCESS_TOKEN_NAME, value: token, options: { maxAge: 1000 * 60 * 15, ...COOKIE_CONFIG } },
+                            { name: REFRESH_TOKEN_NAME, value: refreshToken, options: { maxAge: 1000 * 60 * 60 * 24 * 7, ...COOKIE_CONFIG } }
+                        ]);
                     });
                 })(req, res, next);
             });
@@ -139,4 +111,4 @@ const createRoutes = (app, strategies) => {
     });
 };
 
-module.exports = createRoutes;
+module.exports = createProviderRoutes;

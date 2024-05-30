@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirecting...</title>
     <link rel="stylesheet" href="https://roelc.me/assets/css/main.css">
-    <meta http-equiv="refresh" content="3; URL=<%= redirectUrl %>">
+    <meta http-equiv="refresh" content="1; URL=<%= redirectUrl %>">
     <style>
         .content {
             border-left: 1rem solid var(--clr-accent);
@@ -24,25 +24,18 @@
     <script>
         setTimeout(() => {
             window.location.href = "<%= redirectUrl %>";
-        }, 3000);
+        }, 1000);
 
         setTimeout(() => {
             window.location.replace("<%= redirectUrl %>");
-        }, 3000);
-
-        let seconds = 3;
-        setInterval(() => {
-            seconds--;
-            document.getElementById('seconds').innerText = seconds;
         }, 1000);
     </script>
 </head>
 <body>
     <main>
         <div class="content">
-            <h1>Please wait <span id="seconds">3</span> seconds</h1>
+            <h1>Please wait...</h1>
             <p>
-                Redirecting you to the next page...<br/>
                 If you are not redirected, click <a href="<%= redirectUrl %>">here</a>.
             </p>
         </div>
