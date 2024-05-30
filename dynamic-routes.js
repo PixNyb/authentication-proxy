@@ -51,6 +51,7 @@ const createProviderRoutes = (app, strategies) => {
                     // Apply domain and user whitelists
                     if (strategyConfig.params.domainWhitelist && user.id.includes('@')) {
                         const domainWhitelist = strategyConfig.params.domainWhitelist.split(',');
+                        const emailDomain = user.id.split('@')[1];
 
                         if (!domainWhitelist.includes(emailDomain)) {
                             console.debug(`Unauthorized domain for ${name}: ${emailDomain}`);

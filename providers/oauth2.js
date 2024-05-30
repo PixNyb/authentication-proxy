@@ -41,7 +41,6 @@ const oauth2Provider = (id, keyName) => ({
                     return done(new Error(`Failed to fetch user profile: ${response.statusCode}`));
 
                 try {
-                    console.log(body)
                     const user = JSON.parse(body);
                     return done(null, {
                         id: user[userField],
