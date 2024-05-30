@@ -10,7 +10,19 @@ const createRoutes = (app, strategies) => {
         if (typeof strategyConfig.strategy === 'function') {
             passport.use(name, new strategyConfig.strategy(strategyConfig.params, strategyConfig.verify));
 
-            app.get(loginURL, passport.authenticate(name));
+            const bypass = (req, res, next) => {
+                if (req.path === loginURL || req.path === callbackURL)
+                    res.status(200);
+
+                next();
+            }
+
+            app.use(bypass);
+
+            app.get(loginURL, (req, res, next) => {
+                console.log('loginURL', loginURL);
+                passport.authenticate(name)(req, res, next);
+            });
             console.debug(`Registered route: GET ${loginURL}`);
 
             app[callbackMethod.toLowerCase()](callbackURL, (req, res, next) => {
@@ -79,7 +91,6 @@ const createRoutes = (app, strategies) => {
                     });
                 })(req, res, next);
             });
-
             console.debug(`Registered route: ${callbackMethod} ${callbackURL}`);
         }
     });
