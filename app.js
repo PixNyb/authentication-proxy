@@ -174,8 +174,10 @@ app.get('/set-cookies', (req, res) => {
     }
 
     let domain = req.hostname;
-    if (COOKIE_HOSTS_USE_ROOT)
-        domain = "." + req.hostname.split('.').slice(parts.length - 2).join('.');
+    if (COOKIE_HOSTS_USE_ROOT) {
+        let parts = req.hostname.split('.');
+        domain = "." + parts.slice(parts.length - 2).join('.');
+    }
 
     console.log('Domain:', domain, COOKIE_HOSTS_USE_ROOT);
 
