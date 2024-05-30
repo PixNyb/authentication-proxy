@@ -1,5 +1,5 @@
 function parseBoolean(str) {
-    console.log(str);
+    if (typeof str !== 'string') return false;
     const falsy = ['false', '0', 'no', 'null', 'undefined', ''];
     return !falsy.includes(str.toLowerCase());
 }
