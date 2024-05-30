@@ -177,6 +177,8 @@ app.get('/set-cookies', (req, res) => {
     if (COOKIE_DOMAIN_USE_ROOT)
         domain = "." + req.hostname.split('.').slice(parts.length - 2).join('.');
 
+    console.log('Domain:', domain, COOKIE_DOMAIN_USE_ROOT);
+
     res.cookie(ACCESS_TOKEN_NAME, token, {
         maxAge: 1000 * 60 * 15,
         ...COOKIE_CONFIG,
