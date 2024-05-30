@@ -192,13 +192,15 @@ app.get('/set-cookies', (req, res) => {
     // use the COOKIE_DOMAINS variable to figure out the next domain to redirect to
     // First find the index of the current domain
     if (redirect_url && index == COOKIE_HOSTS.length - 1) {
-        res.status(301).render('redirect', {
+        res.status(200).render('redirect', {
             redirectUrl: redirect_url
         });
     } else {
         const next_domain = COOKIE_HOSTS[index + 1];
         console.log(next_domain, index + 1, COOKIE_HOSTS.length - 1)
-        res.status(301).redirect(`http://${next_domain}/set-cookies?token=${token}&refreshToken=${refreshToken}&redirect_url=${redirect_url}&i=${index + 1}`);
+        res.status(200).render('redirect', {
+            redirectUrl: `http://${next_domain}/set-cookies?token=${token}&refreshToken=${refreshToken}&redirect_url=${redirect_url}&i=${index + 1}`
+        });
     }
 });
 
