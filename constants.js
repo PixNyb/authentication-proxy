@@ -20,6 +20,7 @@ module.exports = {
         sameSite: 'strict',
         path: '/',
     },
-    COOKIE_DOMAIN: process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN.split(',') : [ this.AUTH_HOST ],
-    COOKIE_DOMAIN_USE_ROOT: parseBoolean(process.env.COOKIE_DOMAIN_USE_ROOT) || false,
+
+    COOKIE_HOSTS: process.env.COOKIE_HOSTS ? process.env.COOKIE_HOSTS.split(',') : [ this.AUTH_HOST ],
+    COOKIE_HOSTS_USE_ROOT: parseBoolean(process.env.COOKIE_HOSTS_USE_ROOT) || false,
 }

@@ -150,6 +150,9 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
     } catch (e) {
         req.session.redirect = req.query.redirect_url || `${req.protocol}://${req.headers.host}${req.forwardedUri || ''}`;
 
+        if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+            return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`);
+
         res.status(401).render('form', {
             title: FORM_TITLE || 'Login',
             strategies: templateStrategies,
