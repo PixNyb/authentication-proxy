@@ -4,7 +4,7 @@ const setGlobalCookies = (req, res, redirectUrl, cookies) => {
     const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
         const url = new URL('/set-cookies', `${req.protocol}://${domain}`);
         url.searchParams.append('c', JSON.stringify(cookies));
-        url.searchParams.append('u', `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirectUrl}`);
+        url.searchParams.append('u', redirectUrl);
         url.searchParams.append('i', index);
 
         return url.toString();
@@ -13,7 +13,7 @@ const setGlobalCookies = (req, res, redirectUrl, cookies) => {
     if (req.xhr) {
         res.status(200).json({ cookieUrls });
     } else {
-        res.status(301).redirect(cookieUrls[0]);
+        res.status(200).redirect(cookieUrls[0]);
     }
 };
 
@@ -30,7 +30,7 @@ const removeGlobalCookies = (req, res, redirectUrl, cookies) => {
     if (req.xhr) {
         res.status(200).json({ cookieUrls });
     } else {
-        res.status(301).redirect(cookieUrls[0]);
+        res.status(200).redirect(cookieUrls[0]);
     }
 }
 
