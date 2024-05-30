@@ -25,6 +25,10 @@ const setCookieForMultipleDomains = (req, res, token, refreshToken, redirectUrl)
         return url.toString();
     });
 
+    // Add each next cookie URL to the previous cookie URL with a ?next parameter
+    for (let i = 1; i < cookieUrls.length - 1; i++)
+        cookieUrls[i - 1] += `?redirect_url=${cookieUrls[i]}`;
+
     return { cookies, cookieUrls };
 };
 

@@ -187,7 +187,9 @@ app.get('/set-cookies', (req, res) => {
     });
 
     if (redirect_url) {
-        res.redirect(redirect_url);
+        res.status(301).render('redirect', {
+            redirectUrl: redirect_url
+        });
     } else {
         res.send('Cookies set');
     }
