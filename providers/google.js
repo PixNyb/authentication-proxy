@@ -19,7 +19,6 @@ const googleProvider = (id, keyName) => ({
     },
     verify: (accessToken, refreshToken, profile, done) => {
         // Handle Google user profile here
-        console.debug('Google profile:', profile);
         return done(null, profile);
     }
 });

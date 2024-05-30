@@ -40,8 +40,6 @@ const localProvider = (id, keyName) => ({
             });
         }
 
-        console.debug('Local users:', parsedUsers);
-
         if (parsedUsers[username] === password) {
             return done(null, {
                 id: username,

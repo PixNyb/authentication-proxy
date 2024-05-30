@@ -10,10 +10,10 @@ const createRoutes = (app, strategies) => {
             Object.values(strategies).map(strategy => strategy.params.callbackURL)
         );
 
+        console.log('Bypass routes:', bypassRoutes);
+
         if (bypassRoutes.includes(req.path.split('?')[0]))
             res.status(200);
-
-        console.log('Session:', req.session);
 
         next();
     };
@@ -104,7 +104,6 @@ const createRoutes = (app, strategies) => {
                         });
 
                         if (req.xhr) {
-                            console.debug(`Logged in user with ${name}:`, user);
                             res.status(200).json(user);
                         } else {
                             res.status(301).render('redirect', {
