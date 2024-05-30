@@ -42,14 +42,17 @@ app.use((req, res, next) => {
         req.protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
     if (req.headers['x-forwarded-method'])
         req.method = req.headers['x-forwarded-method'];
-    if (req.headers['x-forwarded-uri']) {
-        if (AUTH_HOST && req.headers.host === AUTH_HOST)
-            req.url = req.headers['x-forwarded-uri'];
-        else
-            req.forwardedUri = req.headers['x-forwarded-uri'];
-    }
+    if (req.headers['x-forwarded-uri'])
+        req.forwardedUri = req.headers['x-forwarded-uri'];
     if (req.headers['x-forwarded-for'])
         req.ip = req.headers['x-forwarded-for'];
+
+    next();
+});
+
+app.use((req, res, next) => {
+    if (AUTH_HOST && req.headers.host === AUTH_HOST)
+        return res.sendStatus(200);
 
     next();
 });
