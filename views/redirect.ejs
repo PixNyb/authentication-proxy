@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Redirecting...</title>
     <link rel="stylesheet" href="https://roelc.me/assets/css/main.css">
-    <meta http-equiv="refresh" content="3; URL=<%= redirectUrl %>">
+    <meta http-equiv="refresh" content="1; URL=<%= redirectUrl %>">
     <style>
         .content {
             border-left: 1rem solid var(--clr-accent);
@@ -24,11 +24,11 @@
     <script>
         setTimeout(() => {
             window.location.href = "<%= redirectUrl %>";
-        }, 3000);
+        }, 1000);
 
         setTimeout(() => {
             window.location.replace("<%= redirectUrl %>");
-        }, 3000);
+        }, 1000);
 
         let seconds = 3;
         setInterval(() => {

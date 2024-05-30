@@ -19,15 +19,14 @@ const setCookieForMultipleDomains = (req, res, token, refreshToken, redirectUrl)
         const url = new URL('/set-cookies', `${protocol}://${domain}`);
         url.searchParams.append('token', token);
         url.searchParams.append('refreshToken', refreshToken);
+        url.searchParams.append('i', index);
         if (index === COOKIE_HOSTS.length - 1) {
             url.searchParams.append('redirect_url', redirectUrl);
+        } else {
+            url.searchParams.append('next_domain', COOKIE_HOSTS[index + 1]);
         }
         return url.toString();
     });
-
-    // Add each next cookie URL to the previous cookie URL with a ?next parameter
-    for (let i = 1; i < cookieUrls.length - 1; i++)
-        cookieUrls[i - 1] += `?redirect_url=${cookieUrls[i]}`;
 
     return { cookies, cookieUrls };
 };
@@ -131,9 +130,7 @@ const createRoutes = (app, strategies) => {
                         if (req.xhr) {
                             res.status(200).json({ cookieUrls });
                         } else {
-                            res.status(301).render('redirect', {
-                                redirectUrl: cookieUrls[0]
-                            });
+                            res.status(301).redirect(cookieUrls[0]);
                         }
                     });
                 })(req, res, next);

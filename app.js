@@ -7,7 +7,7 @@ const passport = require('./passport-setup');
 const session = require('express-session');
 const strategies = require('./strategies');
 const createRoutes = require('./dynamic-routes');
-const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET, COOKIE_DOMAIN_USE_ROOT } = require('./constants');
+const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET, COOKIE_DOMAIN_USE_ROOT, COOKIE_HOSTS } = require('./constants');
 
 const { FORM_TITLE, FORM_ADMIN_EMAIL, SESSION_SECRET } = process.env;
 const metricsMiddleware = promBundle({ includeMethod: true, includePath: true });
@@ -164,7 +164,10 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
 });
 
 app.get('/set-cookies', (req, res) => {
-    const { token, refreshToken, redirect_url } = req.query;
+    const { token, refreshToken, redirect_url, i } = req.query;
+    const index = parseInt(i);
+
+    console.log('Setting cookies:', req.query);
 
     if (!token || !refreshToken) {
         return res.status(400).send('Missing token or refreshToken');
@@ -186,12 +189,16 @@ app.get('/set-cookies', (req, res) => {
         domain
     });
 
-    if (redirect_url) {
+    // use the COOKIE_DOMAINS variable to figure out the next domain to redirect to
+    // First find the index of the current domain
+    if (redirect_url && index == COOKIE_HOSTS.length - 1) {
         res.status(301).render('redirect', {
             redirectUrl: redirect_url
         });
     } else {
-        res.send('Cookies set');
+        const next_domain = COOKIE_HOSTS[index + 1];
+        console.log(next_domain, index + 1, COOKIE_HOSTS.length - 1)
+        res.status(301).redirect(`http://${next_domain}/set-cookies?token=${token}&refreshToken=${refreshToken}&redirect_url=${redirect_url}&i=${index + 1}`);
     }
 });
 
