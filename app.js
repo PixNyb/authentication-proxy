@@ -36,7 +36,22 @@ app.get('/healthz', (req, res) => {
 });
 
 app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] - ${req.method} ${req.url}`);
+    if (req.headers['x-forwarded-host'])
+        req.headers.host = req.headers['x-forwarded-host'];
+    if (req.headers['x-forwarded-proto'])
+        req.protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+    if (req.headers['x-forwarded-method'])
+        req.method = req.headers['x-forwarded-method'];
+    if (req.headers['x-forwarded-uri'])
+        req.forwardedUri = req.headers['x-forwarded-uri'];
+    if (req.headers['x-forwarded-for'])
+        req.ip = req.headers['x-forwarded-for'];
+
+    next();
+});
+
+app.use((req, res, next) => {
+    console.log(`[${new Date().toISOString()}] - ${req.method} ${req.url} - ${req.forwardedUri || 'No forwarded URI'}`);
     next();
 });
 
@@ -64,12 +79,15 @@ const localEndpoints = Object.entries(strategies).filter(([id, strategyConfig]) 
 });
 
 app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
+    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+        return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
+
     const {
         [REFRESH_TOKEN_NAME]: refreshToken
     } = req.cookies;
 
     if (!refreshToken)
-        return res.status(401).redirect('/');
+        return res.status(401).redirect(`${AUTH_HOST}${AUTH_PREFIX}/`);
 
     try {
         const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
@@ -92,12 +110,15 @@ app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
         res.clearCookie(REFRESH_TOKEN_NAME, COOKIE_CONFIG);
 
         res.status(401).render('redirect', {
-            redirectUrl: `${AUTH_HOST}${AUTH_PREFIX}/`
+            redirectUrl: `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`
         });
     }
 });
 
 app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
+    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+        return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
+
     res.clearCookie(ACCESS_TOKEN_NAME, COOKIE_CONFIG);
     res.clearCookie(REFRESH_TOKEN_NAME, COOKIE_CONFIG);
     res.status(301).redirect('/');
@@ -119,10 +140,19 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
         const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
         res.status(200)
-            .set('X-Forwarded-User', decoded.user)
-            .json(decoded);
+            .set('X-Forwarded-User', decoded.user);
+
+        if (req.query.redirect_url)
+            return res.redirect(req.query.redirect_url);
+
+        res.json({ user: decoded.user });
 
     } catch (e) {
+        req.session.redirect = req.query.redirect_url || `${req.protocol}://${req.headers.host}${req.forwardedUri || ''}`;
+
+        if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+            return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`);
+
         res.status(401).render('form', {
             title: FORM_TITLE || 'Login',
             strategies: templateStrategies,

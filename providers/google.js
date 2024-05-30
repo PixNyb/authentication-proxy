@@ -11,6 +11,7 @@ const googleProvider = (id, keyName) => ({
         loginURL: `${AUTH_PREFIX}/_google/${id}`,
         callbackURL: `${AUTH_PREFIX}/_google/${id}/callback`,
         callbackMethod: 'GET',
+        scope: process.env[`GOOGLE_${keyName}_SCOPE`] || ['profile', 'email'],
         domainWhitelist: process.env[`GOOGLE_${keyName}_DOMAIN_WHITELIST`],
         userWhitelist: process.env[`GOOGLE_${keyName}_USER_WHITELIST`],
         displayName: process.env[`GOOGLE_${keyName}_DISPLAY_NAME`] || id,
@@ -18,6 +19,7 @@ const googleProvider = (id, keyName) => ({
     },
     verify: (accessToken, refreshToken, profile, done) => {
         // Handle Google user profile here
+        console.debug('Google profile:', profile);
         return done(null, profile);
     }
 });
