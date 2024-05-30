@@ -20,11 +20,10 @@ const setCookieForMultipleDomains = (req, res, token, refreshToken, redirectUrl)
         url.searchParams.append('token', token);
         url.searchParams.append('refreshToken', refreshToken);
         url.searchParams.append('i', index);
-        if (index === COOKIE_HOSTS.length - 1) {
-            url.searchParams.append('redirect_url', redirectUrl);
-        } else {
+        url.searchParams.append('redirect_url', redirectUrl);
+        if (index < COOKIE_HOSTS.length)
             url.searchParams.append('next_domain', COOKIE_HOSTS[index + 1]);
-        }
+
         return url.toString();
     });
 
