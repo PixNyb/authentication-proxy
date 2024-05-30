@@ -144,7 +144,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
             throw new Error('No token found');
 
         if (!token && refreshToken)
-            return res.status(301).redirect('/refresh');
+            return res.status(301).redirect(`${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh`);
 
         const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
