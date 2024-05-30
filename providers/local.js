@@ -49,7 +49,7 @@ const localProvider = (id, keyName) => ({
                 },
             });
         } else {
-            return done(null, false, { message: 'Invalid username or password' });
+            return done(null, false, { error: 'Invalid username or password' });
         }
     }
 });

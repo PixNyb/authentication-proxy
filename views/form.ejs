@@ -358,7 +358,16 @@
             setTimeout(() => window.location.reload(), 400);
         } catch (error) {
             console.error(error);
-            setError(error.message || 'An error occurred while trying to log in. Please try again later.');
+            let errorMessage = 'An error occurred while trying to log in. Please try again later.';
+
+            try {
+                const json = JSON.parse(error.message);
+                errorMessage = json.message;
+            } catch (e) {
+                console.error(e);
+            }
+
+            setError(errorMessage);
         }
     });
 </script>
