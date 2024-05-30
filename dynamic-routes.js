@@ -33,12 +33,12 @@ const createRoutes = (app, strategies) => {
                 passport.authenticate(name, (err, user, info) => {
                     if (err) {
                         console.debug(`Error authenticating with ${name}:`, err);
-                        return req.xhr ? res.status(500).json({ error: err.message }) : next(err);
+                        return req.xhr ? res.status(500).json({ message: err.message }) : next(err);
                     }
 
                     if (!user) {
                         console.debug(`Failed to authenticate with ${name}:`, info);
-                        return req.xhr ? res.status(401).json({ error: info.message }) : res.redirect('/?error=Invalid%20credentials');
+                        return req.xhr ? res.status(401).json({ message: info.message }) : res.redirect('/?error=Invalid%20credentials');
                     }
 
                     // Apply domain and user whitelists
@@ -47,7 +47,7 @@ const createRoutes = (app, strategies) => {
 
                         if (!domainWhitelist.includes(emailDomain)) {
                             console.debug(`Unauthorized domain for ${name}: ${emailDomain}`);
-                            return req.xhr ? res.status(401).json({ error: 'Unauthorized domain' }) : res.redirect('/?error=Unauthorized%20domain');
+                            return req.xhr ? res.status(401).json({ message: 'Unauthorized domain' }) : res.redirect('/?error=Unauthorized%20domain');
                         }
                     }
 
@@ -56,7 +56,7 @@ const createRoutes = (app, strategies) => {
 
                         if (!userWhitelist.includes(user.id)) {
                             console.debug(`Unauthorized user for ${name}: ${user.id}`);
-                            return req.xhr ? res.status(401).json({ error: 'Unauthorized user' }) : res.redirect('/?error=Unauthorized%20user');
+                            return req.xhr ? res.status(401).json({ message: 'Unauthorized user' }) : res.redirect('/?error=Unauthorized%20user');
                         }
                     }
 
@@ -70,7 +70,7 @@ const createRoutes = (app, strategies) => {
                     req.logIn(user, (err) => {
                         if (err) {
                             console.debug(`Failed to log in user with ${name}:`, err);
-                            return req.xhr ? res.status(500).json({ error: err.message }) : next(err);
+                            return req.xhr ? res.status(500).json({ message: err.message }) : next(err);
                         }
 
                         // Generate a jwt token and refresh token
