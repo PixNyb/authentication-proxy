@@ -1,5 +1,8 @@
 const LocalStrategy = require('passport-local').Strategy;
 const { AUTH_PREFIX } = require('../constants');
+const apacheMd5 = require('apache-md5');
+const fs = require('fs');
+const path = require('path');
 
 const localProvider = (id, keyName) => ({
     name: `local_${id}`,
@@ -28,8 +31,6 @@ const localProvider = (id, keyName) => ({
         }
 
         if (usersFile) {
-            const fs = require('fs');
-            const path = require('path');
             const usersPath = path.resolve(usersFile);
             const data = fs.readFileSync(usersPath, 'utf8');
             const lines = data.split(/\r?\n/);
@@ -40,7 +41,8 @@ const localProvider = (id, keyName) => ({
             });
         }
 
-        if (parsedUsers[username] === password) {
+        const hash = parsedUsers[username];
+        if (hash && apacheMd5(password, hash) === hash) {
             return done(null, {
                 id: username,
                 strategy: `local_${id}`,

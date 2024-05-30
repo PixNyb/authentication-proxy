@@ -22,8 +22,22 @@ const oidcProvider = (id, keyName) => ({
         fontAwesomeIcon: process.env[`OIDC_${keyName}_ICON`] || 'fas fa-user',
     },
     verify: (issuer, sub, profile, accessToken, refreshToken, done) => {
-        // Handle OIDC user profile here
-        return done(null, profile);
+        try {
+            const userProfile = {
+                oidcId: sub,
+                displayName: profile.displayName || profile.name,
+                email: profile.emails && profile.emails.length > 0 ? profile.emails[0].value : null,
+                photo: profile.photos && profile.photos.length > 0 ? profile.photos[0].value : null
+            };
+
+            return done(null, {
+                id: userProfile.email,
+                strategy: `oidc_${id}`,
+                profile: userProfile,
+            });
+        } catch (e) {
+            return done(new Error('Failed to parse user profile'));
+        }
     }
 });
 

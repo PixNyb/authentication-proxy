@@ -30,8 +30,6 @@ const createProviderRoutes = (app, strategies) => {
             console.debug(`Registered route: GET ${loginURL}`);
 
             app[callbackMethod.toLowerCase()](callbackURL, (req, res, next) => {
-                console.debug(`Received callback from ${name}`);
-
                 const { error, error_description, error_uri } = req.query;
                 if (error) {
                     console.debug(`Error from ${name}:`, error, error_description, error_uri);

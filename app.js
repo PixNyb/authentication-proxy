@@ -53,9 +53,6 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] - ${req.method} ${req.url} - ${req.forwardedUri || 'No forwarded URI'}`);
-    console.debug('Headers:', req.headers);
-    console.debug('Cookies:', req.cookies);
-    console.debug('Session:', req.session);
     next();
 });
 

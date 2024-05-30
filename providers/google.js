@@ -18,8 +18,17 @@ const googleProvider = (id, keyName) => ({
         fontAwesomeIcon: 'fab fa-google',
     },
     verify: (accessToken, refreshToken, profile, done) => {
-        // Handle Google user profile here
-        return done(null, profile);
+        const userProfile = {
+            googleId: profile.id,
+            displayName: profile.displayName,
+            email: profile.emails[0].value,
+        }
+
+        return done(null, {
+            id: userProfile.email,
+            strategy: `google_${id}`,
+            profile: userProfile,
+        });
     }
 });
 
