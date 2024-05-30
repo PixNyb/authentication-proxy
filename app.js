@@ -51,13 +51,6 @@ app.use((req, res, next) => {
 });
 
 app.use((req, res, next) => {
-    if (AUTH_HOST && req.headers.host === AUTH_HOST)
-        return res.sendStatus(200);
-
-    next();
-});
-
-app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] - ${req.method} ${req.url} - ${req.forwardedUri || 'No forwarded URI'}`);
     next();
 });
