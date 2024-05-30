@@ -7,7 +7,7 @@ const passport = require('./passport-setup');
 const session = require('express-session');
 const strategies = require('./strategies');
 const createRoutes = require('./dynamic-routes');
-const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET } = require('./constants');
+const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET, COOKIE_DOMAIN_USE_ROOT } = require('./constants');
 
 const { FORM_TITLE, FORM_ADMIN_EMAIL, SESSION_SECRET } = process.env;
 const metricsMiddleware = promBundle({ includeMethod: true, includePath: true });
@@ -125,9 +125,6 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
 });
 
 app.get(`${AUTH_PREFIX}/`, (req, res) => {
-    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-        return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`);
-
     const {
         [ACCESS_TOKEN_NAME]: token,
         [REFRESH_TOKEN_NAME]: refreshToken
@@ -160,6 +157,36 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
             initialEndpoint: localEndpoints[0] ? localEndpoints[0].loginURL : null,
             admin_text: FORM_ADMIN_EMAIL ? `Please contact the administrator at <a href="mailto:${FORM_ADMIN_EMAIL}">${FORM_ADMIN_EMAIL}</a> for access.` : 'You\'re on your own!',
         });
+    }
+});
+
+app.get('/set-cookies', (req, res) => {
+    const { token, refreshToken, redirect_url } = req.query;
+
+    if (!token || !refreshToken) {
+        return res.status(400).send('Missing token or refreshToken');
+    }
+
+    let domain = req.hostname;
+    if (COOKIE_DOMAIN_USE_ROOT)
+        domain = "." + req.hostname.split('.').slice(parts.length - 2).join('.');
+
+    res.cookie(ACCESS_TOKEN_NAME, token, {
+        maxAge: 1000 * 60 * 15,
+        ...COOKIE_CONFIG,
+        domain
+    });
+
+    res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+        ...COOKIE_CONFIG,
+        domain
+    });
+
+    if (redirect_url) {
+        res.redirect(redirect_url);
+    } else {
+        res.send('Cookies set');
     }
 });
 

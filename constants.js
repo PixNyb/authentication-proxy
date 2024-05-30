@@ -19,6 +19,7 @@ module.exports = {
         secure: parseBoolean(process.env.COOKIE_SECURE) || false,
         sameSite: 'strict',
         path: '/',
-        domain: process.env.COOKIE_DOMAIN || null,
-    }
+    },
+    COOKIE_DOMAIN: process.env.COOKIE_DOMAIN ? process.env.COOKIE_DOMAIN.split(',') : [ this.AUTH_HOST ],
+    COOKIE_DOMAIN_USE_ROOT: parseBoolean(process.env.COOKIE_DOMAIN_USE_ROOT) || false,
 }

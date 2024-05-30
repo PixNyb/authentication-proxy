@@ -1,8 +1,29 @@
 const jwt = require('jsonwebtoken');
 const express = require('express');
 const passport = require('passport');
-const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET, ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, AUTH_HOST, AUTH_PREFIX, COOKIE_CONFIG } = require('./constants');
+const { REFRESH_TOKEN_SECRET, ACCESS_TOKEN_SECRET, ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, AUTH_HOST, AUTH_PREFIX, COOKIE_CONFIG, COOKIE_DOMAIN } = require('./constants');
 const { path } = require('./app');
+
+const setCookieForMultipleDomains = (req, res, token, refreshToken, redirectUrl) => {
+    const protocol = req.protocol;
+
+    const cookies = [
+        { name: ACCESS_TOKEN_NAME, value: token, options: { maxAge: 1000 * 60 * 15, ...COOKIE_CONFIG } },
+        { name: REFRESH_TOKEN_NAME, value: refreshToken, options: { maxAge: 1000 * 60 * 60 * 24 * 7, ...COOKIE_CONFIG } }
+    ];
+
+    const cookieUrls = COOKIE_DOMAIN.map((domain, index) => {
+        const url = new URL('/set-cookies', `${protocol}://${domain}`);
+        url.searchParams.append('token', token);
+        url.searchParams.append('refreshToken', refreshToken);
+        if (index === COOKIE_DOMAIN.length - 1) {
+            url.searchParams.append('redirect_url', redirectUrl);
+        }
+        return url.toString();
+    });
+
+    return { cookies, cookieUrls };
+};
 
 const createRoutes = (app, strategies) => {
     const authMiddleware = (req, res, next) => {
@@ -68,9 +89,9 @@ const createRoutes = (app, strategies) => {
                         }
                     }
 
-                    let url = `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`;
+                    let redirectUrl = `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`;
                     if (req.session && req.session.redirect) {
-                        url = req.session.redirect;
+                        redirectUrl = req.session.redirect;
                         delete req.session.redirect;
                     }
 
@@ -98,22 +119,13 @@ const createRoutes = (app, strategies) => {
                             REFRESH_TOKEN_SECRET, { expiresIn: '7d' }
                         );
 
-                        // Set the cookies
-                        res.cookie(ACCESS_TOKEN_NAME, token, {
-                            maxAge: 1000 * 60 * 15,
-                            ...COOKIE_CONFIG
-                        });
-
-                        res.cookie(REFRESH_TOKEN_NAME, refreshToken, {
-                            maxAge: 1000 * 60 * 60 * 24 * 7,
-                            ...COOKIE_CONFIG
-                        });
+                        const { cookieUrls } = setCookieForMultipleDomains(req, res, token, refreshToken, redirectUrl);
 
                         if (req.xhr) {
-                            res.status(200).json(user);
+                            res.status(200).json({ cookieUrls });
                         } else {
                             res.status(301).render('redirect', {
-                                redirectUrl: url,
+                                redirectUrl: cookieUrls[0]
                             });
                         }
                     });
