@@ -10,8 +10,6 @@ const createRoutes = (app, strategies) => {
             Object.values(strategies).map(strategy => strategy.params.callbackURL)
         );
 
-        console.log('Bypass routes:', bypassRoutes);
-
         if (bypassRoutes.includes(req.path.split('?')[0]))
             res.status(200);
 
