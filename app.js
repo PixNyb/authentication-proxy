@@ -96,6 +96,9 @@ app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
         [REFRESH_TOKEN_NAME]: refreshToken
     } = req.cookies;
 
+    if (!refreshToken && req.session.refreshToken)
+        refreshToken = req.session.refreshToken;
+
     if (!refreshToken)
         return res.status(401).redirect(`${AUTH_HOST}${AUTH_PREFIX}/`);
 
@@ -142,6 +145,12 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
         [REFRESH_TOKEN_NAME]: refreshToken
     } = req.cookies;
 
+    if (!token && req.session.token)
+        token = req.session.token;
+
+    if (!refreshToken && req.session.refreshToken)
+        refreshToken = req.session.refreshToken;
+
     try {
         if (!token && !refreshToken)
             throw new Error('No token found');
@@ -155,7 +164,9 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
             .set('X-Forwarded-User', decoded.user);
 
         if (req.query.redirect_url)
-            return res.redirect(req.query.redirect_url);
+            return res.status(200).render('redirect', {
+                redirectUrl: req.query.redirect_url,
+            });
 
         res.json({ user: decoded.user });
 

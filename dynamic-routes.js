@@ -99,6 +99,9 @@ const createProviderRoutes = (app, strategies) => {
                             REFRESH_TOKEN_SECRET, { expiresIn: '7d' }
                         );
 
+                        req.session.token = token;
+                        req.session.refreshToken = refreshToken;
+
                         setGlobalCookies(req, res, redirectUrl, [
                             { name: ACCESS_TOKEN_NAME, value: token, options: { maxAge: 1000 * 60 * 15, ...COOKIE_CONFIG } },
                             { name: REFRESH_TOKEN_NAME, value: refreshToken, options: { maxAge: 1000 * 60 * 60 * 24 * 7, ...COOKIE_CONFIG } }
