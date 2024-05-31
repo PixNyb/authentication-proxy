@@ -1,198 +1,247 @@
-const express = require('express');
-const jwt = require('jsonwebtoken');
-const cookieParser = require('cookie-parser');
-const bodyParser = require('body-parser');
-const promBundle = require('express-prom-bundle');
-const passport = require('./passport-setup');
-const session = require('express-session');
-const strategies = require('./strategies');
-const createProviderRoutes = require('./dynamic-routes');
-const { ACCESS_TOKEN_NAME, REFRESH_TOKEN_NAME, ACCESS_TOKEN_SECRET, AUTH_PREFIX, AUTH_HOST, COOKIE_CONFIG, REFRESH_TOKEN_SECRET, COOKIE_HOSTS_USE_ROOT, COOKIE_HOSTS } = require('./constants');
-const { removeGlobalCookies, setGlobalCookies, createCookieRoutes } = require('./global-cookies');
+const express = require("express");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
+const bodyParser = require("body-parser");
+const promBundle = require("express-prom-bundle");
+const passport = require("./passport-setup");
+const session = require("express-session");
+const strategies = require("./strategies");
+const createProviderRoutes = require("./dynamic-routes");
+const {
+  ACCESS_TOKEN_NAME,
+  REFRESH_TOKEN_NAME,
+  ACCESS_TOKEN_SECRET,
+  AUTH_PREFIX,
+  AUTH_HOST,
+  COOKIE_CONFIG,
+  REFRESH_TOKEN_SECRET,
+} = require("./constants");
+const {
+  removeGlobalCookies,
+  setGlobalCookies,
+  createCookieRoutes,
+} = require("./global-cookies");
 
 const { FORM_TITLE, FORM_ADMIN_EMAIL, SESSION_SECRET } = process.env;
-const metricsMiddleware = promBundle({ includeMethod: true, includePath: true });
+const metricsMiddleware = promBundle({
+  includeMethod: true,
+  includePath: true,
+});
 const app = express();
 
-app.set('view engine', 'ejs');
-app.set('views', 'views');
+app.set("view engine", "ejs");
+app.set("views", "views");
 
 app.use(metricsMiddleware);
 
-app.use(express.json())
+app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 
-app.use(session({
-    secret: SESSION_SECRET || 'keyboard cat',
+app.use(
+  session({
+    secret: SESSION_SECRET || "keyboard cat",
     resave: false,
     saveUninitialized: true,
-}));
+  }),
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/healthz', (req, res) => {
-    res.send('OK');
+app.get("/healthz", (req, res) => {
+  res.send("OK");
 });
 
 app.use((req, res, next) => {
-    if (req.headers['x-forwarded-host'])
-        req.headers.host = req.headers['x-forwarded-host'];
-    if (req.headers['x-forwarded-proto'])
-        req.protocol = req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
-    if (req.headers['x-forwarded-method'])
-        req.method = req.headers['x-forwarded-method'];
-    if (req.headers['x-forwarded-uri'])
-        req.forwardedUri = req.headers['x-forwarded-uri'];
-    if (req.headers['x-forwarded-for'])
-        req.ip = req.headers['x-forwarded-for'];
+  if (req.headers["x-forwarded-host"])
+    req.headers.host = req.headers["x-forwarded-host"];
+  if (req.headers["x-forwarded-proto"])
+    req.protocol =
+      req.headers["x-forwarded-proto"] === "https" ? "https" : "http";
+  if (req.headers["x-forwarded-method"])
+    req.method = req.headers["x-forwarded-method"];
+  if (req.headers["x-forwarded-uri"])
+    req.forwardedUri = req.headers["x-forwarded-uri"];
+  if (req.headers["x-forwarded-for"]) req.ip = req.headers["x-forwarded-for"];
 
-    next();
+  next();
 });
 
 app.use((req, res, next) => {
-    console.log(`[${new Date().toISOString()}] - ${req.method} ${req.url} - ${req.forwardedUri || 'No forwarded URI'}`);
-    next();
+  console.log(
+    `[${new Date().toISOString()}] - ${req.method} ${req.url} - ${req.forwardedUri || "No forwarded URI"}`,
+  );
+  next();
 });
 
 try {
-    createProviderRoutes(app, strategies);
+  createProviderRoutes(app, strategies);
 } catch (e) {
-    console.error('Failed to create routes:', e);
+  console.error("Failed to create routes:", e);
 }
 
 try {
-    createCookieRoutes(app);
+  createCookieRoutes(app);
 } catch (e) {
-    console.error('Failed to create cookie routes:', e);
+  console.error("Failed to create cookie routes:", e);
 }
 
-const templateStrategies = Object.entries(strategies).filter(([id, strategyConfig]) => strategyConfig.type !== 'local').map(([id, strategyConfig]) => {
+const templateStrategies = Object.entries(strategies)
+  .filter(([id, strategyConfig]) => strategyConfig.type !== "local")
+  .map(([id, strategyConfig]) => {
     const { loginURL, displayName, fontAwesomeIcon } = strategyConfig.params;
     return {
-        displayName,
-        loginURL,
-        fontAwesomeIcon,
+      displayName,
+      loginURL,
+      fontAwesomeIcon,
     };
-});
+  });
 
-const localEndpoints = Object.entries(strategies).filter(([id, strategyConfig]) => strategyConfig.type === 'local').map(([id, strategyConfig]) => {
+const localEndpoints = Object.entries(strategies)
+  .filter(([id, strategyConfig]) => strategyConfig.type === "local")
+  .map(([id, strategyConfig]) => {
     const { displayName, loginURL } = strategyConfig.params;
     return {
-        displayName,
-        loginURL,
+      displayName,
+      loginURL,
     };
-});
+  });
 
 app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
-    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-        return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
+  const redirectUrl =
+    req.query.redirect_url ||
+    req.session.redirect ||
+    `${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`;
 
-    let {
-        [REFRESH_TOKEN_NAME]: refreshToken
-    } = req.cookies;
+  if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+    return res.redirect(
+      `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${redirectUrl}`,
+    );
 
-    if (!refreshToken && req.session.refreshToken)
-        refreshToken = req.session.refreshToken;
+  let { [REFRESH_TOKEN_NAME]: refreshToken } = req.cookies;
 
-    if (!refreshToken)
-        return res.status(401).redirect(`${AUTH_HOST}${AUTH_PREFIX}/`);
+  if (!refreshToken && req.session.refreshToken)
+    refreshToken = req.session.refreshToken;
 
-    try {
-        const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
-        const token = jwt.sign(
-            {
-                user: decoded.user,
-                strategy: decoded.strategy,
-            },
-            ACCESS_TOKEN_SECRET, { expiresIn: '15m' }
-        );
+  if (!refreshToken)
+    return res
+      .status(401)
+      .redirect(`${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirectUrl}`);
 
-        setGlobalCookies(req, res, `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`, [
-            { name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG },
-        ]);
+  try {
+    const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+    const token = jwt.sign(
+      {
+        user: decoded.user,
+        strategy: decoded.strategy,
+      },
+      ACCESS_TOKEN_SECRET,
+      { expiresIn: "15m" },
+    );
 
-        res.status(200).json({ token });
-    } catch (e) {
-        // Remove the refresh token cookie if it's invalid
-        removeGlobalCookies(req, res, `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`, [
-            { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
-        ]);
-
-        res.status(401).render('redirect', {
-            redirectUrl: `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`
-        });
-    }
+    setGlobalCookies(req, res, redirectUrl, [
+      { name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG },
+    ]);
+  } catch (e) {
+    // Remove the refresh token cookie if it's invalid
+    removeGlobalCookies(
+      req,
+      res,
+      `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirectUrl}`,
+      [{ name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG }],
+    );
+  }
 });
 
 app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
-    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-        return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
+  const redirectUrl =
+    req.query.redirect_url ||
+    req.session.redirect ||
+    `${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`;
 
-    delete req.session.token;
-    delete req.session.refreshToken;
+  if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+    return res.redirect(
+      `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/logout?redirect_url=${redirectUrl}`,
+    );
 
-    removeGlobalCookies(req, res, `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`, [
-        { name: ACCESS_TOKEN_NAME, options: COOKIE_CONFIG },
-        { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
-    ]);
+  delete req.session.token;
+  delete req.session.refreshToken;
+
+  removeGlobalCookies(
+    req,
+    res,
+    `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirectUrl}`,
+    [
+      { name: ACCESS_TOKEN_NAME, options: COOKIE_CONFIG },
+      { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
+    ],
+  );
 });
 
 app.get(`${AUTH_PREFIX}/`, (req, res) => {
-    let {
-        [ACCESS_TOKEN_NAME]: token,
-        [REFRESH_TOKEN_NAME]: refreshToken
-    } = req.cookies;
+  const redirectUrl =
+    req.query.redirect_url ||
+    req.session.redirect ||
+    `${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`;
 
-    if (!token && req.session.token)
-        token = req.session.token;
+  let { [ACCESS_TOKEN_NAME]: token, [REFRESH_TOKEN_NAME]: refreshToken } =
+    req.cookies;
 
-    if (!refreshToken && req.session.refreshToken)
-        refreshToken = req.session.refreshToken;
+  if (!token && req.session.token) token = req.session.token;
 
-    try {
-        if (!token && !refreshToken)
-            throw new Error('No token found');
+  if (!refreshToken && req.session.refreshToken)
+    refreshToken = req.session.refreshToken;
 
-        if (!token && refreshToken)
-            return res.status(301).redirect(`${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh`);
+  try {
+    if (!token && !refreshToken) throw new Error("No token found");
 
-        const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    if (!token && refreshToken)
+      return res
+        .status(301)
+        .redirect(
+          `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${redirectUrl}`,
+        );
 
-        res.status(200)
-            .set('X-Forwarded-User', decoded.user);
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-        if (req.query.redirect_url)
-            return res.status(200).render('redirect', {
-                redirectUrl: req.query.redirect_url,
-            });
+    res.status(200).set("X-Forwarded-User", decoded.user);
 
-        res.json({ user: decoded.user });
+    if (req.query.redirect_url)
+      return res.status(200).render("redirect", {
+        redirectUrl,
+      });
 
-    } catch (e) {
-        req.session.redirect = req.query.redirect_url || `${req.protocol}://${req.headers.host}${req.forwardedUri || ''}`;
+    res.json({ user: decoded.user });
+  } catch (e) {
+    req.session.redirect =
+      req.query.redirect_url ||
+      `${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`;
 
-        if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-            return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`);
+    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+      return res.redirect(
+        `${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`,
+      );
 
-        res.status(401).render('form', {
-            title: FORM_TITLE || 'Login',
-            strategies: templateStrategies,
-            endpoints: localEndpoints,
-            initialEndpoint: localEndpoints[0] ? localEndpoints[0].loginURL : null,
-            admin_text: FORM_ADMIN_EMAIL ? `Please contact the administrator at <a href="mailto:${FORM_ADMIN_EMAIL}">${FORM_ADMIN_EMAIL}</a> for access.` : 'You\'re on your own!',
-        });
-    }
+    res.status(401).render("form", {
+      title: FORM_TITLE || "Login",
+      strategies: templateStrategies,
+      endpoints: localEndpoints,
+      initialEndpoint: localEndpoints[0] ? localEndpoints[0].loginURL : null,
+      admin_text: FORM_ADMIN_EMAIL
+        ? `Please contact the administrator at <a href="mailto:${FORM_ADMIN_EMAIL}">${FORM_ADMIN_EMAIL}</a> for access.`
+        : "You're on your own!",
+    });
+  }
 });
 
 // Catch all route
 app.use((req, res) => {
-    res.status(404).send('Not Found');
+  res.status(404).send("Not Found");
 });
 
-app.listen(3000, '0.0.0.0', () => {
-    console.log('Server is running on port 3000');
+app.listen(3000, "0.0.0.0", () => {
+  console.log("Server is running on port 3000");
 });
 
 module.exports = app;
