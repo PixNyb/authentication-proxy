@@ -225,7 +225,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
   }
 });
 
-app.use((req, res) => {
+app.use((req, res, next) => {
   const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
 
   if (!token) return res.status(401).send("Unauthorized");
@@ -234,8 +234,10 @@ app.use((req, res) => {
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
     req.headers["x-forwarded-user"] = decoded.user;
 
-    res.status(200);
+    res.sendStatus(200);
   } catch (e) {
+    console.log("Failed to verify token for request", req.url);
+    console.debug(e);
     res.status(401).send("Unauthorized");
   }
 });
