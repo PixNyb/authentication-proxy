@@ -41,7 +41,7 @@ When running the container, you can pass the following environment variables to 
 - `API_PATH`: The prefix path for the API. (Optional, default: `/`)
 - `COOKIE_PREFIX`: The prefix for the cookie name. (Optional, default: ``)
 - `AUTHORISED_USERS`: A list of authorised users in the format `username:password-md5` delimited by a comma. (Optional)
-- `AUTHORIZED_USERS_FILE`: The path to a file containing authorised users in the format `username:password-md5` *Same format as a `.htpasswd` file*. (Optional)
+- `AUTHORIZED_USERS_FILE`: The path to a file containing authorised users in the format `username:password-md5` _Same format as a `.htpasswd` file_. (Optional)
 - `PAGE_SERVICE_NAME`: The name of the service to use for the page, will be displayed on the login page. (Optional, default: `this service`)
 - `PAGE_ADMINISTRATOR_EMAIL`: The email of the administrator, will be displayed on the login page. (Optional, default: ``)
 
