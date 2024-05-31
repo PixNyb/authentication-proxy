@@ -225,9 +225,19 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
   }
 });
 
-// Catch all route
 app.use((req, res) => {
-  res.status(404).send("Not Found");
+  const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
+
+  if (!token) return res.status(401).send("Unauthorized");
+
+  try {
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    req.headers["x-forwarded-user"] = decoded.user;
+
+    res.status(200);
+  } catch (e) {
+    res.status(401).send("Unauthorized");
+  }
 });
 
 app.listen(3000, "0.0.0.0", () => {
