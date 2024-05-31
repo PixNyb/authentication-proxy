@@ -19,9 +19,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Make dockerfiles
-        run: make
-
       - name: Convert repository owner to lowercase
         id: lowercase
         run: echo "LOWERCASE=$(echo ${{ github.repository_owner }} | awk '{print tolower($0)}')" >> $GITHUB_OUTPUT
