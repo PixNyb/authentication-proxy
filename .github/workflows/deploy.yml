@@ -54,11 +54,11 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push code
+      - name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
           tags: |
             ${{ needs.setup.outputs.lowercase }}/authentication-proxy:${{ needs.setup.outputs.tag_name }}
-          cache-from: type=gha,scope=code
-          cache-to: type=gha,mode=max,scope=code
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
