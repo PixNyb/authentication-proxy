@@ -136,9 +136,6 @@ const createProviderRoutes = (app, strategies) => {
               { expiresIn: "7d" },
             );
 
-            req.session.token = token;
-            req.session.refreshToken = refreshToken;
-
             setGlobalCookies(req, res, redirectUrl, [
               {
                 name: ACCESS_TOKEN_NAME,

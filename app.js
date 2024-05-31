@@ -15,8 +15,6 @@ const {
   AUTH_HOST,
   COOKIE_CONFIG,
   REFRESH_TOKEN_SECRET,
-  COOKIE_HOSTS_USE_ROOT,
-  COOKIE_HOSTS,
 } = require("./constants");
 const {
   removeGlobalCookies,
@@ -114,13 +112,18 @@ app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
   if (AUTH_HOST && req.headers.host !== AUTH_HOST)
     return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
 
-  let { [REFRESH_TOKEN_NAME]: refreshToken } = req.cookies;
+  const { [REFRESH_TOKEN_NAME]: refreshToken } = req.cookies;
 
-  if (!refreshToken && req.session.refreshToken)
-    refreshToken = req.session.refreshToken;
+  const { redirect_url } = req.query;
 
   if (!refreshToken)
-    return res.status(401).redirect(`${AUTH_HOST}${AUTH_PREFIX}/`);
+    return res
+      .status(401)
+      .redirect(
+        redirect_url
+          ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
+          : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+      );
 
   try {
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
@@ -136,23 +139,20 @@ app.get(`${AUTH_PREFIX}/refresh`, (req, res) => {
     setGlobalCookies(
       req,
       res,
-      `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+      redirect_url
+        ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
+        : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
       [{ name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG }],
     );
-
-    res.status(200).json({ token });
   } catch (e) {
-    // Remove the refresh token cookie if it's invalid
     removeGlobalCookies(
       req,
       res,
-      `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+      redirect_url
+        ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
+        : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
       [{ name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG }],
     );
-
-    res.status(401).render("redirect", {
-      redirectUrl: `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
-    });
   }
 });
 
@@ -160,13 +160,14 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
   if (AUTH_HOST && req.headers.host !== AUTH_HOST)
     return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
 
-  delete req.session.token;
-  delete req.session.refreshToken;
+  const { redirect_url } = req.query;
 
   removeGlobalCookies(
     req,
     res,
-    `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+    redirect_url
+      ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
+      : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
     [
       { name: ACCESS_TOKEN_NAME, options: COOKIE_CONFIG },
       { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
@@ -175,13 +176,10 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
 });
 
 app.get(`${AUTH_PREFIX}/`, (req, res) => {
-  let { [ACCESS_TOKEN_NAME]: token, [REFRESH_TOKEN_NAME]: refreshToken } =
+  const { [ACCESS_TOKEN_NAME]: token, [REFRESH_TOKEN_NAME]: refreshToken } =
     req.cookies;
 
-  if (!token && req.session.token) token = req.session.token;
-
-  if (!refreshToken && req.session.refreshToken)
-    refreshToken = req.session.refreshToken;
+  const { redirect_url } = req.query;
 
   try {
     if (!token && !refreshToken) throw new Error("No token found");
@@ -189,15 +187,19 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
     if (!token && refreshToken)
       return res
         .status(301)
-        .redirect(`${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh`);
+        .redirect(
+          redirect_url
+            ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${redirect_url}`
+            : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`,
+        );
 
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
     res.status(200).set("X-Forwarded-User", decoded.user);
 
-    if (req.query.redirect_url)
-      return res.status(200).render("redirect", {
-        redirectUrl: req.query.redirect_url,
+    if (redirect_url)
+      return res.render("redirect", {
+        redirectUrl: redirect_url,
       });
 
     res.json({ user: decoded.user });
@@ -208,7 +210,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
 
     if (AUTH_HOST && req.headers.host !== AUTH_HOST)
       return res.redirect(
-        `${req.protocol}://${AUTH_HOST}${req.url}?redirect_url=${req.session.redirect}`,
+        `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${req.session.redirect}`,
       );
 
     res.status(401).render("form", {

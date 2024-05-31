@@ -17,7 +17,7 @@ module.exports = {
   COOKIE_CONFIG: {
     httpOnly: true,
     secure: parseBoolean(process.env.COOKIE_SECURE) || false,
-    sameSite: "strict",
+    sameSite: "lax",
     path: "/",
   },
 
