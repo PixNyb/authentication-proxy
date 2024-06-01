@@ -16,7 +16,6 @@ const {
   COOKIE_CONFIG,
   REFRESH_TOKEN_SECRET,
   FORM_TITLE,
-  FORM_ADMIN_EMAIL,
   SESSION_SECRET,
   FORM_ADMIN_TEXT,
   PROMETHEUS_PREFIX,
@@ -189,6 +188,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
   const { [ACCESS_TOKEN_NAME]: token, [REFRESH_TOKEN_NAME]: refreshToken } =
     req.cookies;
   const { redirect_url } = req.query;
+  console.log("Cookies:", req.cookies);
 
   try {
     if (!token && !refreshToken) throw new Error("No token found");
@@ -236,28 +236,29 @@ defineRoutes(app, strategies);
 
 // Authorization Middleware
 app.use((req, res, next) => {
-  // TODO: Add a check for the provider routes so the auth middleware can be used on itself/globally in the entire traefik middleware chain
-  // const path = (req.forwardedUri || req.url).split("?")[0];
-  // const providerRoutes = Object.values(strategies).reduce((acc, strategy) => {
-  //   if (strategy.params.loginURL) acc.push(strategy.params.loginURL);
-  //   if (strategy.params.callbackURL) acc.push(strategy.params.callbackURL);
-  //   return acc;
-  // }, []);
+  const path = (req.forwardedUri || req.url).split("?")[0];
+  const providerRoutes = Object.values(strategies).reduce((acc, strategy) => {
+    if (strategy.params.loginURL) acc.push(strategy.params.loginURL);
+    if (strategy.params.callbackURL) acc.push(strategy.params.callbackURL);
+    return acc;
+  }, []);
 
-  // const cookieRoutes = ["/set-cookies", "/remove-cookies"];
+  const appRoutes = ["/set-cookies", "/remove-cookies", "/refresh", "/logout"];
 
-  // if (providerRoutes.includes(path) || cookieRoutes.includes(path)) return next();
+  // There's something funky going on with the access token cookie, it'll end up unsetting it and looping into /refresh where it fails to set a new cookie and thus looping back to /refresh
+  // This doesn't interfere with anything, but doesn't do much either.
+  if (providerRoutes.includes(path) || appRoutes.includes(path))
+    return res.sendStatus(200);
 
   const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
 
-  if (!token) return res.status(401).send("Unauthorized");
+  if (!token) return res.sendStatus(401);
 
   try {
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-    req.headers["x-forwarded-user"] = decoded.user;
-    next();
+    res.set("X-Forwarded-User", decoded.user).sendStatus(200);
   } catch (e) {
-    res.status(401).send("Unauthorized");
+    res.sendStatus(401);
   }
 });
 
