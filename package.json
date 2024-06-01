@@ -1,12 +1,9 @@
 {
-  "name": "authenticator",
+  "name": "authentication-proxy",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
+  "description": "Authentication proxy compatible with traefik forward-auth that includes support for OpenID Connect, OAuth2, htpasswd and Google OAuth2.",
+  "main": "app.js",
+  "author": "Roël Couwenberg <contact@roelc.me>",
   "license": "ISC",
   "dependencies": {
     "apache-md5": "^1.1.8",
@@ -14,8 +11,10 @@
     "cookie-parser": "^1.4.6",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
+    "express-ejs-layouts": "^2.5.1",
     "express-prom-bundle": "^7.0.0",
     "express-session": "^1.18.0",
+    "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",

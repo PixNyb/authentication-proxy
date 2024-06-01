@@ -45,32 +45,19 @@ const createProviderRoutes = (app, strategies) => {
       app.get(loginURL, (req, res, next) => {
         passport.authenticate(name)(req, res, next);
       });
-      console.debug(`Registered route: GET ${loginURL}`);
 
       app[callbackMethod.toLowerCase()](callbackURL, (req, res, next) => {
-        const { error, error_description, error_uri } = req.query;
-        if (error) {
-          console.debug(
-            `Error from ${name}:`,
-            error,
-            error_description,
-            error_uri,
-          );
-          return req.xhr
-            ? res.status(401).json({ error, error_description, error_uri })
-            : res.render("error", { error, error_description, error_uri });
-        }
+        const { error } = req.query;
+        if (error) throw new Error(`${error}`);
 
         passport.authenticate(name, (err, user, info) => {
           if (err) {
-            console.debug(`Error authenticating with ${name}:`, err);
             return req.xhr
               ? res.status(500).json({ error: err.message })
               : next(err);
           }
 
           if (!user) {
-            console.debug(`Failed to authenticate with ${name}:`, info);
             return req.xhr
               ? res.status(401).json({ error: info.message })
               : res.redirect("/?error=Invalid%20credentials");
@@ -82,24 +69,20 @@ const createProviderRoutes = (app, strategies) => {
               strategyConfig.params.domainWhitelist.split(",");
             const emailDomain = user.id.split("@")[1];
 
-            if (!domainWhitelist.includes(emailDomain)) {
-              console.debug(`Unauthorized domain for ${name}: ${emailDomain}`);
+            if (!domainWhitelist.includes(emailDomain))
               return req.xhr
                 ? res.status(401).json({ error: "Unauthorized domain" })
                 : res.redirect("/?error=Unauthorized%20domain");
-            }
           }
 
           if (strategyConfig.params.userWhitelist) {
             const userWhitelist =
               strategyConfig.params.userWhitelist.split(",");
 
-            if (!userWhitelist.includes(user.id)) {
-              console.debug(`Unauthorized user for ${name}: ${user.id}`);
+            if (!userWhitelist.includes(user.id))
               return req.xhr
                 ? res.status(401).json({ error: "Unauthorized user" })
                 : res.redirect("/?error=Unauthorized%20user");
-            }
           }
 
           let redirectUrl = `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`;
@@ -110,12 +93,10 @@ const createProviderRoutes = (app, strategies) => {
 
           // Log user in
           req.logIn(user, (err) => {
-            if (err) {
-              console.debug(`Failed to log in user with ${name}:`, err);
+            if (err)
               return req.xhr
                 ? res.status(500).json({ error: err.message })
                 : next(err);
-            }
 
             // Generate a jwt token and refresh token
             const token = jwt.sign(
@@ -151,7 +132,6 @@ const createProviderRoutes = (app, strategies) => {
           });
         })(req, res, next);
       });
-      console.debug(`Registered route: ${callbackMethod} ${callbackURL}`);
     }
   });
 };

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%- title %></title>
+    <link rel="stylesheet" href="https://roelc.me/assets/css/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <meta name="robots" content="noindex, nofollow">
+    <%- defineContent('additional_head') %>
+    <style>
+        main {
+            margin: auto !important;
+            align-items: center;
+        }
+
+        .method-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        form + .method-group {
+            border-left: 1rem solid var(--clr-accent);
+            flex-direction: column;
+            padding-left: 1rem;
+        }
+
+        @media screen and (max-width: 600px) {
+            .method-group {
+                flex-direction: row;
+                justify-content: flex-start;
+            }
+
+            form + .method-group {
+                border: 0;
+                border-top: 1rem solid var(--clr-accent);
+                padding: 0;
+                padding-top: 1rem;
+            }
+        }
+
+        .method-group__item {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div class="content">
+            <%- body %>
+        </div>
+    </main>
+    <%- include('../partials/footer.ejs') %>
+    <%- script %>
+</body>
+</html>

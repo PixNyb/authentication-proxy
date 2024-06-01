@@ -1,7 +1,7 @@
 # Dockerised Authentication Proxy
 
 This is a Dockerised authentication for use cases where basic authentication doesn't cut it.
-It uses Nginx as a reverse proxy to authenticate users with a username and password using a html form and a Node.js server to issue access and refresh tokens.
+It integrates with the traefik reverse proxy as forward authentication middleware.
 
 ## Usage
 
@@ -13,76 +13,127 @@ docker build -t authentication-proxy .
 
 ### Run the Docker container
 
-To run the Docker container, you can use the following command:
-
 ```bash
-docker run \
-    -p 8000:80 \
-    -e UPSTREAM_HOST=service \
-    -e UPSTREAM_PORT=80 \
-    -e AUTHORISED_USERS=user:password-hash \
-    pixnyb/
+docker run -d -p 8080:3000 \
+    -e AUTH_HOST=localhost:8080 \
+    -e COOKIE_SECURE=false \
+    -e COOKIE_HOSTS=localhost:8080 \
+    -e COOKIE_HOSTS_USE_ROOT=true \
+    -e LOCAL_HTPASSWD_USERS=user:password \
+    -e LOCAL_HTPASSWD_USERS_FILE=/etc/nginx/.htpasswd \
+    -e LOCAL_HTPASSWD_DISPLAY_NAME=Local \
+    -e OAUTH2_GITHUB_AUTH_URL=https://github.com/login/oauth/authorize \
+    -e OAUTH2_GITHUB_TOKEN_URL=https://github.com/login/oauth/access_token \
+    -e OAUTH2_GITHUB_USER_URL=https://api.github.com/user \
+    -e OAUTH2_GITHUB_CLIENT_ID=xxx \
+    -e OAUTH2_GITHUB_CLIENT_SECRET=xxx \
+    -e OAUTH2_GITHUB_DOMAIN_WHITELIST=xxx \
+    -e OAUTH2_GITHUB_ICON=fab fa-github
 ```
 
-This command will start the container and expose ports `80` for the web server. It will also proxy requests to the `service` host on port `80` and authenticate users with the username `user` and password `password`.
+On first glance, this looks like a mess. Let's break it down:
 
-The image is availlable on [Docker Hub](https://hub.docker.com/r/pixnyb/authentication-proxy).
+- `-d` runs the container in detached mode
+- `-p 8080:3000` maps port 8080 on the host to port 3000 in the container
+- `-e AUTH_HOST=localhost:8080` is the host and port of the authentication proxy, this is used to redirect users when authentication is required.
+- `-e COOKIE_SECURE=false` sets the secure flag on the cookie to false, this is useful when running the container locally, will default to true if not set.
+- `-e COOKIE_HOSTS=localhost:8080` is a list of hosts that the authentication proxy is available on, this is used to be able to set cookies on multiple domains (e.g. `domain1.dev,domain2.me`)
+- `-e COOKIE_HOSTS_USE_ROOT=true` sets the cookie path on the base domain, useful when all subdomains should be authenticated.
 
-#### Environment Variables
+The rest of the environment variables are used to configure the authentication methods.
 
-When running the container, you can pass the following environment variables to customise the container:
+### Environment variables
 
-- `UPSTREAM_HOST`: The host to proxy requests to. (Required)
-- `UPSTREAM_PORT`: The port to proxy requests to. (Required)
-- `ACCESS_TOKEN_SECRET`: The secret key to use for signing the access token. (Required)
-- `ACCESS_TOKEN_LIFETIME`: The lifetime of the access token in seconds. (Optional, default: `15m`)
-- `REFRESH_TOKEN_SECRET`: The secret key to use for signing the refresh token. (Required)
-- `REFRESH_TOKEN_LIFETIME`: The lifetime of the refresh token in seconds. (Optional, default: `7d`)
-- `API_PATH`: The prefix path for the API. (Optional, default: `/`)
-- `COOKIE_PREFIX`: The prefix for the cookie name. (Optional, default: ``)
-- `AUTHORISED_USERS`: A list of authorised users in the format `username:password-md5` delimited by a comma. (Optional)
-- `AUTHORIZED_USERS_FILE`: The path to a file containing authorised users in the format `username:password-md5` _Same format as a `.htpasswd` file_. (Optional)
-- `PAGE_SERVICE_NAME`: The name of the service to use for the page, will be displayed on the login page. (Optional, default: `this service`)
-- `PAGE_ADMINISTRATOR_EMAIL`: The email of the administrator, will be displayed on the login page. (Optional, default: ``)
+As mentioned above, there are a few environment variables that can be used to configure the authentication proxy, these are:
+
+| Variable              | Description                                                                                           | Default          |
+| --------------------- | ----------------------------------------------------------------------------------------------------- | ---------------- |
+| AUTH_PREFIX           | The prefix for the authentication proxy                                                               |                  |
+| AUTH_HOST             | The host and port of the authentication proxy, used to redirect users when authentication is required | `localhost`      |
+| SESSION_SECRET        | The secret used to sign the session cookie                                                            |                  |
+| ACCESS_TOKEN_NAME     | The name of the access token cookie                                                                   | `_access_token`  |
+| ACCESS_TOKEN_SECRET   | The secret used to sign the access token cookie                                                       | `secret`         |
+| REFRESH_TOKEN_NAME    | The name of the refresh token cookie                                                                  | `_refresh_token` |
+| REFRESH_TOKEN_SECRET  | The secret used to sign the refresh token cookie                                                      | `refresh`        |
+| COOKIE_SECURE         | Whether the cookies should be secure or not                                                           | `true`           |
+| COOKIE_HOSTS          | A list of hosts that the authentication proxy is available on                                         | `localhost`      |
+| COOKIE_HOSTS_USE_ROOT | Whether the base domain should be used as the cookie domain                                           | `false`          |
+| FORM_TITLE            | The title of the login form                                                                           | `Login`          |
+| FORM_ADMIN_EMAIL      | The email address of the administrator, this will be shown in the help dialog                         |                  |
+| FORM_DISABLE_CREDITS  | Whether the credits should be disabled or not                                                         | `false`          |
+| PROMETHEUS_PREFIX     | The prefix for the Prometheus metrics endpoint. Since this route is not secured, it should be random  |                  |
+
+> [!WARNING]
+> The Prometheus metrics endpoint will always end in `/metrics`. The prefix is used to obfuscate the endpoint. (e.g. `/random-token` -> `/random-token/metrics`)
+
+The proxy login form will change based on the authentication methods that are configured. The form will show a list of buttons for each configured provider, as well as a username and password field for the local provider.
+
+| Both providers configured                                     | Only local provider configured                                         | Only external providers configured                                         | No providers configured                                                 |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| ![Both providers configured](docs/images/login-form-both.png) | ![Only local provider configured](docs/images/login-form-internal.png) | ![Only external providers configured](docs/images/login-form-external.png) | ![No providers configured](docs/images/login-form-none.png) |
+
+### Provider configuration
+
+The authentication proxy supports multiple kinds of providers with support for multiple instances of each one. For all provider configuration variables the following scheme is used:
+`<TYPE>_<IDENTIFIER>_<FIELD>` where `<TYPE>` is the provider type, `<IDENTIFIER>` is the instance identifier and `<FIELD>` is the field name.
 
 > [!NOTE]
-> The `AUTHORISED_USERS` and `AUTHORIZED_USERS_FILE` environment variables are mutually exclusive. You can only use one of them at a time. If both are provided, the `AUTHORIZED_USERS_FILE` variable will take precedence.
+> From here on out, the provider configuration variables will be referred to as `_<FIELD>`. For example, `OAUTH2_GITHUB_AUTH_URL` will be referred to as `_AUTH_URL`.
 
-#### Prometheus Metrics
+The following variables are supported for each provider:
 
-The authentication proxy exposes Prometheus metrics on the `$API_PATH/metrics` endpoint.
+| Variable           | Description                                                                           | Default |
+| ------------------ | ------------------------------------------------------------------------------------- | ------- |
+| \_DISPLAY_NAME     | The name of the provider, this will be shown on the login form and in the help dialog |         |
+| \_ICON             | The fontawesome icon to use for the provider (e.g. `fab fa-github`)                   |         |
+| \_DOMAIN_WHITELIST | A list of domains that are allowed to authenticate using this provider                |         |
+| \_USER_WHITELIST   | A list of users that are allowed to authenticate using this provider                  |         |
 
-## Example
+> [!NOTE]
+> Although technically supported, the `LOCAL` provider does not show an icon on the login form or use the whitelists, since the user list is in itself a whitelist.
 
-To demonstrate how to use the Dockerised authentication proxy, we will create an authenticated proxy for a [vscode instance](https://hub.docker.com/r/pixnyb/code).
+#### LOCAL
 
-```yaml
-services:
-  proxy:
-    image: pixnyb/authentication-proxy
-    hostname: proxy
-    ports:
-      - 8000:80
-    environment:
-      - UPSTREAM_HOST=code
-      - UPSTREAM_PORT=8000
-      - ACCESS_TOKEN_SECRET=secret
-      - REFRESH_TOKEN_SECRET=secret
-      - AUTHORISED_USERS=user:<password-hash>
-  code:
-    image: pixnyb/code
-    hostname: code
-    environment:
-      - VSCODE_KEYRING_PASS=password
-      - GIT_GLOBAL_USER_NAME=PixNyb
-      - GIT_GLOBAL_USER_EMAIL=contact@roelc.me
-      - GH_TOKEN=<...>
-      - GPG_SECRET_KEY=<...>
-      - REPO_URL=<...>
-      - INIT_SCRIPT_URL=https://example.com/init.sh
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-```
+The local provider is used to authenticate users using a username and password.
 
-In this example, we have a `proxy` service that proxies requests to the `code` service. The `code` service is a vscode instance that is authenticated with the `AUTHORISED_USERS` environment variable.
+Passwords should be encrypted as md5 hashes, just like in the `.htpasswd` file.
+
+| Variable     | Description                                                            | Default |
+| ------------ | ---------------------------------------------------------------------- | ------- |
+| \_USERS      | A list of users in the format `username:password` separated by a comma |         |
+| \_USERS_FILE | The path to the users file                                             |         |
+
+#### OAUTH2
+
+The OAuth2 provider is used to authenticate users using an OAuth2 provider.
+
+| Variable        | Description                                                                                              | Default |
+| --------------- | -------------------------------------------------------------------------------------------------------- | ------- |
+| \_AUTH_URL      | The URL to the OAuth2 provider's authentication endpoint                                                 |         |
+| \_TOKEN_URL     | The URL to the OAuth2 provider's token endpoint                                                          |         |
+| \_USER_URL      | The URL to the OAuth2 provider's user endpoint                                                           |         |
+| \_USER_FIELD    | The field in the user object that should be used as the identifier, this is used to check the whitelists | `email` |
+| \_CLIENT_ID     | The client ID for the OAuth2 provider                                                                    |         |
+| \_CLIENT_SECRET | The client secret for the OAuth2 provider                                                                |         |
+
+#### GOOGLE
+
+The Google provider is used to authenticate users using Google.
+
+| Variable        | Description                               | Default |
+| --------------- | ----------------------------------------- | ------- |
+| \_CLIENT_ID     | The client ID for the Google provider     |         |
+| \_CLIENT_SECRET | The client secret for the Google provider |         |
+
+#### OIDC
+
+The OIDC provider is used to authenticate users using OpenID Connect.
+
+| Variable        | Description                                            | Default |
+| --------------- | ------------------------------------------------------ | ------- |
+| \_ISSUER        | The issuer URL for the OIDC provider                   |         |
+| \_AUTH_URL      | The URL to the OIDC provider's authentication endpoint |         |
+| \_TOKEN_URL     | The URL to the OIDC provider's token endpoint          |         |
+| \_USER_URL      | The URL to the OIDC provider's user endpoint           |         |
+| \_CLIENT_ID     | The client ID for the OIDC provider                    |         |
+| \_CLIENT_SECRET | The client secret for the OIDC provider                |         |

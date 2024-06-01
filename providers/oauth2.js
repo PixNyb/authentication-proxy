@@ -21,12 +21,9 @@ const oauth2Provider = (id, keyName) => ({
   },
   verify: (accessToken, refreshToken, profile, done) => {
     // Get the user profile from the OAuth2 provider using the userURL if it's set
-    const userURL =
-      process.env[`OAUTH2_${keyName}_USER_URL`] ||
-      process.env[`OAUTH2_${keyName}_PROFILE_URL`];
+    const userURL = process.env[`OAUTH2_${keyName}_USER_URL`];
     const userField = process.env[`OAUTH2_${keyName}_USER_FIELD`] || "email"; // The field to use as the user identifier
     if (userURL) {
-      console.debug(`Fetching user profile from ${userURL}`);
       const request = require("request");
       request.get(
         {
@@ -37,9 +34,6 @@ const oauth2Provider = (id, keyName) => ({
           },
         },
         (error, response, body) => {
-          console.debug(
-            `Received response from ${userURL}: ${response.statusCode}`,
-          );
           if (error) return done(error);
 
           if (response.statusCode !== 200)

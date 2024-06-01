@@ -4,6 +4,7 @@ const {
   AUTH_HOST,
   AUTH_PREFIX,
 } = require("./constants");
+const redirect = require("./redirect");
 
 const setGlobalCookies = (req, res, redirectUrl, cookies) => {
   const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
@@ -60,9 +61,7 @@ const createCookieRoutes = (app) => {
     });
 
     if (index == COOKIE_HOSTS.length - 1) {
-      res.status(200).render("redirect", {
-        redirectUrl: redirect_url || "/",
-      });
+      redirect(res, redirect_url || "/");
     } else {
       const next_domain = COOKIE_HOSTS[index + 1];
       const url = new URL("/set-cookies", `http://${next_domain}`);
@@ -70,9 +69,7 @@ const createCookieRoutes = (app) => {
       url.searchParams.append("i", index + 1);
       url.searchParams.append("u", u);
 
-      res.status(200).render("redirect", {
-        redirectUrl: url.toString(),
-      });
+      redirect(res, url.toString());
     }
   });
 
@@ -96,9 +93,7 @@ const createCookieRoutes = (app) => {
     });
 
     if (index == COOKIE_HOSTS.length - 1) {
-      res.status(200).render("redirect", {
-        redirectUrl: redirect_url || "/",
-      });
+      redirect(res, redirect_url || "/");
     } else {
       const next_domain = COOKIE_HOSTS[index + 1];
       const url = new URL("/remove-cookies", `http://${next_domain}`);
@@ -106,9 +101,7 @@ const createCookieRoutes = (app) => {
       url.searchParams.append("i", index + 1);
       url.searchParams.append("u", u);
 
-      res.status(200).render("redirect", {
-        redirectUrl: url.toString(),
-      });
+      redirect(res, url.toString());
     }
   });
 };
