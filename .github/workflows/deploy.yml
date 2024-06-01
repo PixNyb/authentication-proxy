@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - development
+    tags:
+      - v*
 
 jobs:
   setup:
@@ -30,7 +32,9 @@ jobs:
       - name: Create the tag name
         id: tag
         run: |
-          if [[ "${{ github.ref_name }}" == "main" ]]; then
+          if [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "TAG_NAME=$(echo ${github.ref_name} | sed 's/^v//')" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "TAG_NAME=latest" >> $GITHUB_OUTPUT
           else
             if [[ "${{ steps.pr.outputs.IS_PR }}" == "true" ]]; then
@@ -54,19 +58,11 @@ jobs:
           username: ${{ vars.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
           push: true
           tags: |
             ${{ needs.setup.outputs.lowercase }}/authentication-proxy:${{ needs.setup.outputs.tag_name }}
-            ghcr.io/${{ needs.setup.outputs.lowercase }}/authentication-proxy:${{ needs.setup.outputs.tag_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

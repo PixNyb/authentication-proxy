@@ -1,5 +1,7 @@
 # Dockerised Authentication Proxy
 
+[![Build and Publish Docker Image](https://github.com/PixNyb/authentication-proxy/actions/workflows/deploy.yml/badge.svg)](https://github.com/PixNyb/authentication-proxy/actions/workflows/deploy.yml)
+
 This is a Dockerised authentication for use cases where basic authentication doesn't cut it.
 It integrates with the traefik reverse proxy as forward authentication middleware.
 
