@@ -212,6 +212,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
     if (redirect_url) redirect(res, redirect_url);
 
     res.render("logged-in", {
+      title: "Logged In",
       show_credit: !FORM_DISABLE_CREDITS,
     });
   } catch (e) {
