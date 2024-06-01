@@ -70,9 +70,9 @@ As mentioned above, there are a few environment variables that can be used to co
 
 The proxy login form will change based on the authentication methods that are configured. The form will show a list of buttons for each configured provider, as well as a username and password field for the local provider.
 
-| Both providers configured                                     | Only local provider configured                                         | Only external providers configured                                         | No providers configured                                                 |
-| ------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| ![Both providers configured](docs/images/login-form-both.png) | ![Only local provider configured](docs/images/login-form-internal.png) | ![Only external providers configured](docs/images/login-form-external.png) | ![No providers configured](docs/images/login-form-none.png) |
+| Both providers configured                                     | Only local provider configured                                         | Only external providers configured                                         |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| ![Both providers configured](docs/images/login-form-both.png) | ![Only local provider configured](docs/images/login-form-internal.png) | ![Only external providers configured](docs/images/login-form-external.png) |
 
 ### Provider configuration
 

@@ -38,6 +38,9 @@
                     </a>
                 </div>
             <% }); %>
+            <% if (!initialEndpoint) { %>
+                <button type="button" id="help">Help</button>
+            <% } %>
         </div>
     <% } %>
     <!-- If there is no endpoint or strategy, show some text -->
@@ -54,8 +57,7 @@
         Hidden behind this gate is a secret. To unlock it, you must provide the correct credentials.
     </p>
     <p>
-        Are you the administrator? If so, you should be able to log in.<br/>
-        Not the administrator but need in? <%- admin_text %>
+        Having trouble? <%- admin_text %>
     </p>
     <form method="dialog">
         <button type="submit">Got it!</button>
