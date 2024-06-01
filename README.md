@@ -137,3 +137,7 @@ The OIDC provider is used to authenticate users using OpenID Connect.
 | \_USER_URL      | The URL to the OIDC provider's user endpoint           |         |
 | \_CLIENT_ID     | The client ID for the OIDC provider                    |         |
 | \_CLIENT_SECRET | The client secret for the OIDC provider                |         |
+
+## Contributing
+
+Contributions are welcome, please read the [CONTRIBUTING.md](CONTRIBUTING.md) file for more information.

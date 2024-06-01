@@ -90,22 +90,18 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/500", (req, res) => {
-  throw new Error("This is a test error");
-});
-
 // Define routes
 const defineRoutes = (app, strategies) => {
-  try {
-    createProviderRoutes(app, strategies);
-  } catch (e) {
-    console.error("Failed to create routes:", e);
-  }
-
   try {
     createCookieRoutes(app);
   } catch (e) {
     console.error("Failed to create cookie routes:", e);
+  }
+
+  try {
+    createProviderRoutes(app, strategies);
+  } catch (e) {
+    console.error("Failed to create routes:", e);
   }
 };
 
@@ -209,7 +205,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
     res.status(200).set("X-Forwarded-User", decoded.user);
 
-    if (redirect_url) redirect(res, redirect_url);
+    if (redirect_url) return redirect(res, redirect_url);
 
     res.render("logged-in", {
       title: "Logged In",
@@ -240,6 +236,18 @@ defineRoutes(app, strategies);
 
 // Authorization Middleware
 app.use((req, res, next) => {
+  // TODO: Add a check for the provider routes so the auth middleware can be used on itself/globally in the entire traefik middleware chain
+  // const path = (req.forwardedUri || req.url).split("?")[0];
+  // const providerRoutes = Object.values(strategies).reduce((acc, strategy) => {
+  //   if (strategy.params.loginURL) acc.push(strategy.params.loginURL);
+  //   if (strategy.params.callbackURL) acc.push(strategy.params.callbackURL);
+  //   return acc;
+  // }, []);
+
+  // const cookieRoutes = ["/set-cookies", "/remove-cookies"];
+
+  // if (providerRoutes.includes(path) || cookieRoutes.includes(path)) return next();
+
   const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
 
   if (!token) return res.status(401).send("Unauthorized");

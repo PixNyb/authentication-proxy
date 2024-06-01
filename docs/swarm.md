@@ -1,6 +1,6 @@
-# Docker Swarm examples
+# Docker Swarm example
 
-This directory contains examples of how to deploy the authentication proxy in a Docker Swarm environment.
+This file contains an example of how to deploy the authentication proxy in a Docker Swarm environment.
 
 ## Prerequisites
 
@@ -109,3 +109,6 @@ services:
         - traefik.http.routers.whoami.middlewares=auth
         - traefik.http.services.whoami.loadbalancer.server.port=80
 ```
+
+> [!WARNING]
+> Currently setting the auth middleware on the auth service will cause the service to be unable to authenticate anyone. This is because the auth service will try to authenticate itself, which will cause an infinite loop. This will be fixed in a future release.

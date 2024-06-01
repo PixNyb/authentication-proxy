@@ -15,22 +15,6 @@ const { path } = require("./app");
 const { setGlobalCookies } = require("./global-cookies");
 
 const createProviderRoutes = (app, strategies) => {
-  const authMiddleware = (req, res, next) => {
-    const bypassRoutes = Object.values(strategies)
-      .map((strategy) => strategy.params.loginURL)
-      .concat(
-        Object.values(strategies).map(
-          (strategy) => strategy.params.callbackURL,
-        ),
-      );
-
-    if (bypassRoutes.includes(req.path.split("?")[0])) res.status(200);
-
-    next();
-  };
-
-  app.use(authMiddleware);
-
   Object.entries(strategies).forEach(([name, strategyConfig]) => {
     const { loginURL, callbackURL, callbackMethod } = strategyConfig.params;
     if (typeof strategyConfig.strategy === "function") {
