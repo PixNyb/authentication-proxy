@@ -7,11 +7,6 @@
 </p>
 
 <script>
-    setTimeout(() => {
-        window.location.href = "<%= redirectUrl %>";
-    }, 1000);
-
-    setTimeout(() => {
-        window.location.replace("<%= redirectUrl %>");
-    }, 1000);
+    window.location.href = "<%= redirectUrl %>";
+    window.location.replace("<%= redirectUrl %>");
 </script>
