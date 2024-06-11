@@ -41,7 +41,9 @@ app.set("layout extractScripts", true);
 app.use(
   helmet.contentSecurityPolicy({
     directives: {
+      defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      formAction: ["'self'"],
     },
   }),
 );
