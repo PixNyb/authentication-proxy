@@ -38,15 +38,15 @@ app.set("view engine", "ejs");
 app.set("layout extractScripts", true);
 
 // Middleware
-app.use(
-  helmet.contentSecurityPolicy({
-    directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      formAction: [AUTH_HOST]
-    },
-  }),
-);
+// app.use(
+//   helmet.contentSecurityPolicy({
+//     directives: {
+//       defaultSrc: ["'self'"],
+//       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", AUTH_HOST],
+//       formAction: [AUTH_HOST],
+//     },
+//   }),
+// );
 app.use(
   promBundle({
     includeMethod: true,
