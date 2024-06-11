@@ -43,7 +43,7 @@ app.use(
     directives: {
       defaultSrc: ["'self'"],
       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
-      formAction: ["'self'"],
+      formAction: [AUTH_HOST]
     },
   }),
 );
