@@ -57,6 +57,55 @@
             display: flex;
             justify-content: space-between;
         }
+
+        dd {
+            margin-left: 1rem;
+        }
+
+        dt + dd {
+            margin-top: 0.5rem;
+        }
+
+        dd + dt {
+            margin-top: 1rem;
+        }
+
+        .accordion {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: var(--clr-accent);
+        }
+
+        .accordion__title {
+            cursor: pointer;
+            position: relative;
+            display: block;
+        }
+
+        .accordion__title::after {
+            content: '\f107';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%) rotate(0deg);
+            transition: transform 0.3s;
+        }
+
+        .accordion__content {
+            display: none;
+            margin-top: 1rem;
+            border-top: 5px solid var(--clr-background);
+        }
+
+        .accordion.active .accordion__content {
+            display: block;
+        }
+
+        .accordion.active .accordion__title::after {
+            transform: translateY(-50%) rotate(180deg);
+        }
     </style>
 </head>
 <body>
@@ -67,5 +116,12 @@
     </main>
     <%- include('../partials/footer.ejs') %>
     <%- script %>
+    <script>
+        document.querySelectorAll('.accordion__title').forEach(function(title) {
+            title.addEventListener('click', function() {
+                title.parentElement.classList.toggle('active');
+            });
+        });
+    </script>
 </body>
 </html>

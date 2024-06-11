@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
@@ -20,6 +22,8 @@ const {
   FORM_ADMIN_TEXT,
   PROMETHEUS_PREFIX,
   FORM_DISABLE_CREDITS,
+  COOKIE_HOSTS,
+  API_KEYS,
 } = require("./constants");
 const {
   removeGlobalCookies,
@@ -211,6 +215,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
 
     res.render("logged-in", {
       title: "Logged In",
+      apiKeys: API_KEYS,
       show_credit: !FORM_DISABLE_CREDITS,
     });
   } catch (e) {
@@ -251,6 +256,9 @@ app.use((req, res, next) => {
   // This doesn't interfere with anything, but doesn't do much either.
   if (providerRoutes.includes(path) || appRoutes.includes(path))
     return res.sendStatus(200);
+
+  // If the request contains an authorization header, api_key query parameter or an api_key field in the body, we'll check it against our API_KEYS variable
+  // TODO: Finish
 
   const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
 

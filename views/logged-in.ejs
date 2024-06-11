@@ -1,3 +1,15 @@
+<style>
+    code span {
+        color: var(--clr-blue);
+    }
+
+    .token-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+</style>
+
 <h1 class="large">
     <%= title %>
 </h1>
@@ -7,6 +19,43 @@
     Feel free to enter an address on your own.
 </p>
 
+<hr/>
+
+<h2>Access Tokens</h2>
+
+<p>
+    Below are the long-lived access tokens you can use to authenticate in case short-lived tokens are not suitable for your use case.
+</p>
+
+<div class="token-list">
+    <% Object.entries(longLivedTokens).forEach(function([name, token]) { %>
+        <button onclick="navigator.clipboard.writeText('<%= token %>')"><%= name %></button>
+    <% }); %>
+</div>
+
+<div class="accordion">
+    <span class="accordion__title">Usage</span>
+    <div class="accordion__content">
+        <dl>
+            <dt>Header</dt>
+            <dd><code>curl -H "Authorization: Bearer <span>TOKEN</span>" https://api.example.com</code></dd>
+            <dt>Query Parameter</dt>
+            <dd><code>curl https://api.example.com?token=<span>TOKEN</span></code></dd>
+            <dt>Body</dt>
+            <dd><code>curl -d "token=<span>TOKEN</span>" https://api.example.com</code></dd>
+        </dl>
+    </div>
+</div>
+
 <p>
     <a href="./logout">Logout</a>
 </p>
+
+<script>
+    document.querySelectorAll('tbody tr').forEach(function(row) {
+        row.addEventListener('click', function() {
+            const key = row.getAttribute('data-key');
+            navigator.clipboard.writeText(key);
+        });
+    });
+</script>
