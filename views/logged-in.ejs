@@ -1,3 +1,15 @@
+<style>
+    code span {
+        color: var(--clr-blue);
+    }
+
+    .token-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+</style>
+
 <h1 class="large">
     <%= title %>
 </h1>
@@ -10,3 +22,46 @@
 <p>
     <a href="./logout">Logout</a>
 </p>
+
+<% if (longLivedTokensEnabled) { %>
+    <hr/>
+
+    <h2>Access Tokens</h2>
+
+    <p>
+        Below are the long-lived access tokens you can use to authenticate in case short-lived tokens are not suitable for your use case.<br/>
+        Tokens will be copied to your clipboard when clicked.
+    </p>
+
+    <div class="row">
+        <div class="token-list">
+            <% Object.entries(longLivedTokens).forEach(function([name, token]) { %>
+                <button data-token="<%= token %>">
+                    <%= name %>
+                </button>
+            <% }); %>
+        </div>
+        <div>
+            <pre><code>$ curl -H "Authorization: Bearer <span class="token-placeholder">TOKEN</span>" https://example.com/api/v1/protected
+
+$ curl https://example.com/api/v1/protected?tkn=<span class="token-placeholder">TOKEN</span>
+
+$ curl -X POST https://example.com/api/v1/protected -d "token=<span class="token-placeholder">TOKEN</span>"</code></pre>
+        </div>
+    </div>
+<% } %>
+
+<script>
+    // const placeholders = document.querySelectorAll('.token-placeholder');
+    const buttons = document.querySelectorAll('button[data-token]');
+
+    buttons.forEach(function(button) {
+        button.addEventListener('click', function() {
+            // placeholders.forEach(function(placeholder) {
+            //     placeholder.textContent = button.getAttribute('data-token');
+            // });
+
+            navigator.clipboard.writeText(button.getAttribute('data-token'));
+        });
+    });
+</script>

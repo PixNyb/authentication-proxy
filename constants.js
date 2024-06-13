@@ -1,7 +1,27 @@
+const crypto = require("crypto");
+
 function parseBoolean(str) {
   if (typeof str !== "string") return false;
   const falsy = ["false", "0", "no", "null", "undefined", ""];
   return !falsy.includes(str.toLowerCase());
+}
+
+function processTokens(tokens) {
+  return tokens.split(",").reduce((acc, key) => {
+    const [name, value] = key.split(":");
+    acc[name] = value;
+    return acc;
+  }, {});
+}
+
+function generateTokens() {
+  const tokens = {};
+  const numTokens = parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 6;
+  for (let i = 0; i < numTokens; i++) {
+    tokens[`Token ${i + 1}`] =
+      "token_" + crypto.randomBytes(64).toString("hex");
+  }
+  return tokens;
 }
 
 module.exports = {
@@ -32,9 +52,19 @@ module.exports = {
   FORM_TITLE: process.env.FORM_TITLE || "Login",
   FORM_ADMIN_EMAIL: process.env.FORM_ADMIN_EMAIL || "",
   FORM_ADMIN_TEXT: process.env.FORM_ADMIN_EMAIL
-    ? `Please contact the administrator at <a href="mailto:${process.env.FORM_ADMIN_EMAIL || ""}">${process.env.FORM_ADMIN_EMAIL || ""}</a> for access.`
+    ? `Please contact the administrator at <a href="mailto:${
+        process.env.FORM_ADMIN_EMAIL || ""
+      }">${process.env.FORM_ADMIN_EMAIL || ""}</a> for access.`
     : "You're on your own!",
   FORM_DISABLE_CREDITS: parseBoolean(process.env.FORM_DISABLE_CREDITS) || false,
+
+  // API keys
+  LONG_LIVED_TOKENS_ENABLED:
+    parseBoolean(process.env.LONG_LIVED_TOKENS_ENABLED) || false,
+  LONG_LIVED_TOKENS_NUMBER: parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 6,
+  LONG_LIVED_TOKENS: process.env.LONG_LIVED_TOKENS
+    ? processTokens(process.env.LONG_LIVED_TOKENS)
+    : generateTokens(),
 
   // Metrics
   PROMETHEUS_PREFIX: process.env.PROMETHEUS_PREFIX || "",

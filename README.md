@@ -48,22 +48,29 @@ The rest of the environment variables are used to configure the authentication m
 
 As mentioned above, there are a few environment variables that can be used to configure the authentication proxy, these are:
 
-| Variable              | Description                                                                                           | Default          |
-| --------------------- | ----------------------------------------------------------------------------------------------------- | ---------------- |
-| AUTH_PREFIX           | The prefix for the authentication proxy                                                               |                  |
-| AUTH_HOST             | The host and port of the authentication proxy, used to redirect users when authentication is required | `localhost`      |
-| SESSION_SECRET        | The secret used to sign the session cookie                                                            |                  |
-| ACCESS_TOKEN_NAME     | The name of the access token cookie                                                                   | `_access_token`  |
-| ACCESS_TOKEN_SECRET   | The secret used to sign the access token cookie                                                       | `secret`         |
-| REFRESH_TOKEN_NAME    | The name of the refresh token cookie                                                                  | `_refresh_token` |
-| REFRESH_TOKEN_SECRET  | The secret used to sign the refresh token cookie                                                      | `refresh`        |
-| COOKIE_SECURE         | Whether the cookies should be secure or not                                                           | `true`           |
-| COOKIE_HOSTS          | A list of hosts that the authentication proxy is available on                                         | `localhost`      |
-| COOKIE_HOSTS_USE_ROOT | Whether the base domain should be used as the cookie domain                                           | `false`          |
-| FORM_TITLE            | The title of the login form                                                                           | `Login`          |
-| FORM_ADMIN_EMAIL      | The email address of the administrator, this will be shown in the help dialog                         |                  |
-| FORM_DISABLE_CREDITS  | Whether the credits should be disabled or not                                                         | `false`          |
-| PROMETHEUS_PREFIX     | The prefix for the Prometheus metrics endpoint. Since this route is not secured, it should be random  |                  |
+| Variable                  | Description                                                                                           | Default          |
+| ------------------------- | ----------------------------------------------------------------------------------------------------- | ---------------- |
+| AUTH_PREFIX               | The prefix for the authentication proxy                                                               |                  |
+| AUTH_HOST                 | The host and port of the authentication proxy, used to redirect users when authentication is required | `localhost`      |
+| SESSION_SECRET            | The secret used to sign the session cookie                                                            |                  |
+| ACCESS_TOKEN_NAME         | The name of the access token cookie                                                                   | `_access_token`  |
+| ACCESS_TOKEN_SECRET       | The secret used to sign the access token cookie                                                       | `secret`         |
+| REFRESH_TOKEN_NAME        | The name of the refresh token cookie                                                                  | `_refresh_token` |
+| REFRESH_TOKEN_SECRET      | The secret used to sign the refresh token cookie                                                      | `refresh`        |
+| COOKIE_SECURE             | Whether the cookies should be secure or not                                                           | `true`           |
+| COOKIE_HOSTS              | A list of hosts that the authentication proxy is available on                                         | `localhost`      |
+| COOKIE_HOSTS_USE_ROOT     | Whether the base domain should be used as the cookie domain                                           | `false`          |
+| LONG_LIVED_TOKENS_ENABLED | Whether long lived tokens should be enabled or not                                                    | `false`          |
+| LONG_LIVED_TOKENS_NUMBER  | The number of long lived tokens that should be generated                                              | `6`              |
+| LONG_LIVED_TOKENS         | A list of tokens that should be added as name:token pairs separated by a comma                        |                  |
+| FORM_TITLE                | The title of the login form                                                                           | `Login`          |
+| FORM_ADMIN_EMAIL          | The email address of the administrator, this will be shown in the help dialog                         |                  |
+| FORM_DISABLE_CREDITS      | Whether the credits should be disabled or not                                                         | `false`          |
+| PROMETHEUS_PREFIX         | The prefix for the Prometheus metrics endpoint. Since this route is not secured, it should be random  |                  |
+
+> [!NOTE]
+> The `LONG_LIVED_TOKENS` variable should be in the format `name:token,name:token`. These tokens can be found after logging in to the auth service and visiting the `AUTH_HOST`.
+> ![LONG_LIVED_TOKENS](docs/images/long-lived-tokens.png)
 
 > [!WARNING]
 > The Prometheus metrics endpoint will always end in `/metrics`. The prefix is used to obfuscate the endpoint. (e.g. `/random-token` -> `/random-token/metrics`)

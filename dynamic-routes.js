@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken");
-const express = require("express");
 const passport = require("passport");
 const {
   REFRESH_TOKEN_SECRET,
@@ -9,9 +8,7 @@ const {
   AUTH_HOST,
   AUTH_PREFIX,
   COOKIE_CONFIG,
-  COOKIE_HOSTS,
 } = require("./constants");
-const { path } = require("./app");
 const { setGlobalCookies } = require("./global-cookies");
 
 const createProviderRoutes = (app, strategies) => {
