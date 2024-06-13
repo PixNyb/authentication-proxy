@@ -61,7 +61,7 @@ As mentioned above, there are a few environment variables that can be used to co
 | COOKIE_HOSTS              | A list of hosts that the authentication proxy is available on                                         | `localhost`      |
 | COOKIE_HOSTS_USE_ROOT     | Whether the base domain should be used as the cookie domain                                           | `false`          |
 | LONG_LIVED_TOKENS_ENABLED | Whether long lived tokens should be enabled or not                                                    | `false`          |
-| LONG_LIVED_TOKENS_NUMBER  | The number of long lived tokens that should be generated                                              | `4`              |
+| LONG_LIVED_TOKENS_NUMBER  | The number of long lived tokens that should be generated                                              | `6`              |
 | LONG_LIVED_TOKENS         | A list of tokens that should be added as name:token pairs separated by a comma                        |                  |
 | FORM_TITLE                | The title of the login form                                                                           | `Login`          |
 | FORM_ADMIN_EMAIL          | The email address of the administrator, this will be shown in the help dialog                         |                  |

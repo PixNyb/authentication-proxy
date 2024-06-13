@@ -16,7 +16,7 @@ function processTokens(tokens) {
 
 function generateTokens() {
   const tokens = {};
-  const numTokens = parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 4;
+  const numTokens = parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 6;
   for (let i = 0; i < numTokens; i++) {
     tokens[`Token ${i + 1}`] =
       "token_" + crypto.randomBytes(64).toString("hex");
@@ -61,7 +61,7 @@ module.exports = {
   // API keys
   LONG_LIVED_TOKENS_ENABLED:
     parseBoolean(process.env.LONG_LIVED_TOKENS_ENABLED) || false,
-  LONG_LIVED_TOKENS_NUMBER: parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 4,
+  LONG_LIVED_TOKENS_NUMBER: parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 6,
   LONG_LIVED_TOKENS: process.env.LONG_LIVED_TOKENS
     ? processTokens(process.env.LONG_LIVED_TOKENS)
     : generateTokens(),
