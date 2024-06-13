@@ -23,7 +23,8 @@ const {
   PROMETHEUS_PREFIX,
   FORM_DISABLE_CREDITS,
   COOKIE_HOSTS,
-  API_KEYS,
+  LONG_LIVED_TOKENS,
+  LONG_LIVED_TOKENS_ENABLED,
 } = require("./constants");
 const {
   removeGlobalCookies,
@@ -56,7 +57,7 @@ app.use(
     includeMethod: true,
     includePath: true,
     metricsPath: `${PROMETHEUS_PREFIX}/metrics`,
-  }),
+  })
 );
 app.use(express.json());
 app.use(cookieParser());
@@ -66,7 +67,7 @@ app.use(
     secret: SESSION_SECRET || "keyboard cat",
     resave: false,
     saveUninitialized: true,
-  }),
+  })
 );
 app.use(passport.initialize());
 app.use(passport.session());
@@ -90,10 +91,31 @@ app.use((req, res, next) => {
 // Middleware for logging requests
 app.use((req, res, next) => {
   console.log(
-    `[${new Date().toISOString()}] - ${req.method} ${req.url} - ${req.forwardedUri || "No forwarded URI"}`,
+    `[${new Date().toISOString()}] - ${req.method} ${req.url} - ${
+      req.forwardedUri || "No forwarded URI"
+    }`
   );
   next();
 });
+
+// Middleware for passing requests with a valid LONG_LIVED_TOKEN
+if (LONG_LIVED_TOKENS_ENABLED)
+  app.use((req, res, next) => {
+    const forwardedQuery = req.forwardedUri?.split("?")[1];
+    const query = req.url.split("?")[1] || forwardedQuery;
+    const queryObj = new URLSearchParams(query);
+
+    const token =
+      req.query.tkn ||
+      queryObj.get("tkn") ||
+      req.body.token ||
+      req.headers.authorization?.split(" ")[1];
+    if (!token) return next();
+
+    const tokenExists = Object.values(LONG_LIVED_TOKENS).includes(token);
+    if (tokenExists) return res.sendStatus(200);
+    else return next();
+  });
 
 // Define routes
 const defineRoutes = (app, strategies) => {
@@ -139,7 +161,7 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
       .redirect(
         redirect_url
           ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
-          : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+          : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`
       );
 
   try {
@@ -147,7 +169,7 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
     const token = jwt.sign(
       { user: decoded.user, strategy: decoded.strategy },
       ACCESS_TOKEN_SECRET,
-      { expiresIn: "15m" },
+      { expiresIn: "15m" }
     );
 
     setGlobalCookies(
@@ -156,7 +178,7 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
       redirect_url
         ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
         : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
-      [{ name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG }],
+      [{ name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG }]
     );
   } catch (e) {
     removeGlobalCookies(
@@ -165,7 +187,7 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
       redirect_url
         ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
         : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
-      [{ name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG }],
+      [{ name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG }]
     );
   }
 });
@@ -185,7 +207,7 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
     [
       { name: ACCESS_TOKEN_NAME, options: COOKIE_CONFIG },
       { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
-    ],
+    ]
   );
 });
 
@@ -194,7 +216,6 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
   const { [ACCESS_TOKEN_NAME]: token, [REFRESH_TOKEN_NAME]: refreshToken } =
     req.cookies;
   const { redirect_url } = req.query;
-  console.log("Cookies:", req.cookies);
 
   try {
     if (!token && !refreshToken) throw new Error("No token found");
@@ -205,7 +226,11 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
         .redirect(
           redirect_url
             ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${redirect_url}`
-            : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`,
+            : `${
+                req.protocol
+              }://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${
+                req.protocol
+              }://${req.headers.host}${req.forwardedUri || ""}`
         );
 
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
@@ -215,7 +240,8 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
 
     res.render("logged-in", {
       title: "Logged In",
-      apiKeys: API_KEYS,
+      longLivedTokensEnabled: LONG_LIVED_TOKENS_ENABLED,
+      longLivedTokens: LONG_LIVED_TOKENS,
       show_credit: !FORM_DISABLE_CREDITS,
     });
   } catch (e) {
@@ -225,7 +251,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
 
     if (AUTH_HOST && req.headers.host !== AUTH_HOST)
       return res.redirect(
-        `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${req.session.redirect}`,
+        `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${req.session.redirect}`
       );
 
     res.status(401).render("form", {
@@ -257,7 +283,7 @@ app.use((req, res, next) => {
   if (providerRoutes.includes(path) || appRoutes.includes(path))
     return res.sendStatus(200);
 
-  // If the request contains an authorization header, api_key query parameter or an api_key field in the body, we'll check it against our API_KEYS variable
+  // If the request contains an authorization header, api_key query parameter or an api_key field in the body, we'll check it against our LONG_LIVED_TOKENS variable
   // TODO: Finish
 
   const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
@@ -278,9 +304,9 @@ app.use((err, req, res, next) => {
   res.status(500).render("error", {
     title: err.message,
     stack: err.stack,
-    url: `${req.protocol}://${req.headers.host}${req.forwardedUri || req.url}`.split(
-      "?",
-    )[0],
+    url: `${req.protocol}://${req.headers.host}${
+      req.forwardedUri || req.url
+    }`.split("?")[0],
     back_url:
       session.redirect ||
       `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}`.split("?")[0],

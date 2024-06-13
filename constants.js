@@ -6,21 +6,22 @@ function parseBoolean(str) {
   return !falsy.includes(str.toLowerCase());
 }
 
-function processApiKeys(keys) {
-  return keys.split(",").reduce((acc, key) => {
+function processTokens(tokens) {
+  return tokens.split(",").reduce((acc, key) => {
     const [name, value] = key.split(":");
     acc[name] = value;
     return acc;
   }, {});
 }
 
-function generateApiKeys() {
-  const keys = {};
-  const numKeys = parseInt(process.env.API_KEYS_NUMBER) || 5;
-  for (let i = 0; i < numKeys; i++) {
-    keys[`Key ${i + 1}`] = "auth_key_" + crypto.randomBytes(64).toString('hex');
+function generateTokens() {
+  const tokens = {};
+  const numTokens = parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 4;
+  for (let i = 0; i < numTokens; i++) {
+    tokens[`Token ${i + 1}`] =
+      "token_" + crypto.randomBytes(64).toString("hex");
   }
-  return keys;
+  return tokens;
 }
 
 module.exports = {
@@ -51,14 +52,19 @@ module.exports = {
   FORM_TITLE: process.env.FORM_TITLE || "Login",
   FORM_ADMIN_EMAIL: process.env.FORM_ADMIN_EMAIL || "",
   FORM_ADMIN_TEXT: process.env.FORM_ADMIN_EMAIL
-    ? `Please contact the administrator at <a href="mailto:${process.env.FORM_ADMIN_EMAIL || ""}">${process.env.FORM_ADMIN_EMAIL || ""}</a> for access.`
+    ? `Please contact the administrator at <a href="mailto:${
+        process.env.FORM_ADMIN_EMAIL || ""
+      }">${process.env.FORM_ADMIN_EMAIL || ""}</a> for access.`
     : "You're on your own!",
   FORM_DISABLE_CREDITS: parseBoolean(process.env.FORM_DISABLE_CREDITS) || false,
 
   // API keys
-  API_KEYS_ENABLED: parseBoolean(process.env.API_KEYS_ENABLED) || false,
-  API_KEYS_NUMBER: parseInt(process.env.API_KEYS_NUMBER) || 5,
-  API_KEYS: process.env.API_KEYS ? processApiKeys(process.env.API_KEYS) : generateApiKeys(),
+  LONG_LIVED_TOKENS_ENABLED:
+    parseBoolean(process.env.LONG_LIVED_TOKENS_ENABLED) || false,
+  LONG_LIVED_TOKENS_NUMBER: parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 4,
+  LONG_LIVED_TOKENS: process.env.LONG_LIVED_TOKENS
+    ? processTokens(process.env.LONG_LIVED_TOKENS)
+    : generateTokens(),
 
   // Metrics
   PROMETHEUS_PREFIX: process.env.PROMETHEUS_PREFIX || "",
