@@ -15,7 +15,7 @@ const googleProvider = (id, keyName) => ({
     domainWhitelist: process.env[`GOOGLE_${keyName}_DOMAIN_WHITELIST`],
     userWhitelist: process.env[`GOOGLE_${keyName}_USER_WHITELIST`],
     displayName: process.env[`GOOGLE_${keyName}_DISPLAY_NAME`] || id,
-    fontAwesomeIcon: "fab fa-google",
+    fontAwesomeIcon: process.env[`GOOGLE_${keyName}_ICON`] || "fab fa-google",
   },
   verify: (accessToken, refreshToken, profile, done) => {
     const userProfile = {
