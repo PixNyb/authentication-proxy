@@ -15,7 +15,7 @@ const localProvider = (id, keyName) => ({
     callbackURL: `${AUTH_PREFIX}/_local/${id}`,
     callbackMethod: "POST",
     displayName: process.env[`LOCAL_${keyName}_DISPLAY_NAME`] || id,
-    fontAwesomeIcon: "fas fa-user",
+    fontAwesomeIcon: process.env[`LOCAL_${keyName}_ICON`] || "fas fa-user",
   },
   verify: (username, password, done) => {
     const users = process.env[`LOCAL_${keyName}_USERS`];
