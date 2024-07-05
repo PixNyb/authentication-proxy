@@ -5,6 +5,10 @@
   "main": "app.js",
   "author": "Roël Couwenberg <contact@roelc.me>",
   "license": "ISC",
+  "scripts": {
+    "start": "node app.js",
+    "test": "jest"
+  },
   "dependencies": {
     "apache-md5": "^1.1.8",
     "body-parser": "^1.20.2",
@@ -25,5 +29,8 @@
     "passport-oauth2": "^1.8.0",
     "passport-openidconnect": "^0.1.2",
     "request": "^2.88.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
   }
 }

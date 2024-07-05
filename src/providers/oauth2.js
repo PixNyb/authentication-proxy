@@ -1,5 +1,5 @@
 const { Strategy: OAuth2Strategy } = require("passport-oauth2");
-const { AUTH_PREFIX } = require("../constants");
+const { AUTH_PREFIX } = require("../config/constants");
 
 const oauth2Provider = (id, keyName) => ({
   name: `oauth2_${id}`,
@@ -38,7 +38,7 @@ const oauth2Provider = (id, keyName) => ({
 
           if (response.statusCode !== 200)
             return done(
-              new Error(`Failed to fetch user profile: ${response.statusCode}`),
+              new Error(`Failed to fetch user profile: ${response.statusCode}`)
             );
 
           try {
@@ -51,7 +51,7 @@ const oauth2Provider = (id, keyName) => ({
           } catch (e) {
             return done(new Error("Failed to parse user profile"));
           }
-        },
+        }
       );
     } else
       return done(null, {

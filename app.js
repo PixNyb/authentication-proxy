@@ -5,10 +5,10 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const bodyParser = require("body-parser");
 const promBundle = require("express-prom-bundle");
-const passport = require("./passport-setup");
+const passport = require("./src/passport-setup");
 const session = require("express-session");
-const strategies = require("./strategies");
-const createProviderRoutes = require("./dynamic-routes");
+const strategies = require("./src/strategies");
+const createProviderRoutes = require("./src/dynamic-routes");
 const {
   ACCESS_TOKEN_NAME,
   REFRESH_TOKEN_NAME,
@@ -22,18 +22,22 @@ const {
   FORM_ADMIN_TEXT,
   PROMETHEUS_PREFIX,
   FORM_DISABLE_CREDITS,
-  COOKIE_HOSTS,
   LONG_LIVED_TOKENS,
   LONG_LIVED_TOKENS_ENABLED,
-} = require("./constants");
+} = require("./src/config/constants");
 const {
   removeGlobalCookies,
   setGlobalCookies,
   createCookieRoutes,
-} = require("./global-cookies");
+} = require("./src/global-cookies");
 const helmet = require("helmet");
 const expressEjsLayouts = require("express-ejs-layouts");
-const redirect = require("./redirect");
+const redirect = require("./src/redirect");
+const forwardedHeaders = require("./src/middlewares/forwarded-headers");
+const requestLogger = require("./src/middlewares/request-logger");
+const longLivedTokens = require("./src/middlewares/long-lived-tokens");
+const errorHandler = require("./src/middlewares/error-handler");
+const authorization = require("./src/middlewares/authorization");
 
 // Initialize app
 const app = express();
@@ -77,45 +81,11 @@ app.get("/healthz", (req, res) => {
   res.send("OK");
 });
 
-// Middleware for handling forwarded headers
-app.use((req, res, next) => {
-  const headers = req.headers;
-  req.headers.host = headers["x-forwarded-host"] || req.headers.host;
-  req.protocol = headers["x-forwarded-proto"] || req.protocol;
-  req.method = headers["x-forwarded-method"] || req.method;
-  req.forwardedUri = headers["x-forwarded-uri"] || req.forwardedUri;
-  req.ip = headers["x-forwarded-for"] || req.ip;
-  next();
-});
+app.use(forwardedHeaders);
+app.use(requestLogger);
 
-// Middleware for logging requests
-app.use((req, res, next) => {
-  console.log(
-    `[${new Date().toISOString()}] - ${req.method} ${req.url} - ${
-      req.forwardedUri || "No forwarded URI"
-    }`
-  );
-  next();
-});
-
-// Middleware for passing requests with a valid LONG_LIVED_TOKEN
 if (LONG_LIVED_TOKENS_ENABLED)
-  app.use((req, res, next) => {
-    const forwardedQuery = req.forwardedUri?.split("?")[1];
-    const query = req.url.split("?")[1] || forwardedQuery;
-    const queryObj = new URLSearchParams(query);
-
-    const token =
-      req.query.tkn ||
-      queryObj.get("tkn") ||
-      req.body.token ||
-      req.headers.authorization?.split(" ")[1];
-    if (!token) return next();
-
-    const tokenExists = Object.values(LONG_LIVED_TOKENS).includes(token);
-    if (tokenExists) return res.sendStatus(200);
-    else return next();
-  });
+  app.use(longLivedTokens);
 
 // Define routes
 const defineRoutes = (app, strategies) => {
@@ -267,52 +237,8 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
 
 defineRoutes(app, strategies);
 
-// Authorization Middleware
-app.use((req, res, next) => {
-  const path = (req.forwardedUri || req.url).split("?")[0];
-  const providerRoutes = Object.values(strategies).reduce((acc, strategy) => {
-    if (strategy.params.loginURL) acc.push(strategy.params.loginURL);
-    if (strategy.params.callbackURL) acc.push(strategy.params.callbackURL);
-    return acc;
-  }, []);
-
-  const appRoutes = ["/set-cookies", "/remove-cookies", "/refresh", "/logout"];
-
-  // There's something funky going on with the access token cookie, it'll end up unsetting it and looping into /refresh where it fails to set a new cookie and thus looping back to /refresh
-  // This doesn't interfere with anything, but doesn't do much either.
-  if (providerRoutes.includes(path) || appRoutes.includes(path))
-    return res.sendStatus(200);
-
-  // If the request contains an authorization header, api_key query parameter or an api_key field in the body, we'll check it against our LONG_LIVED_TOKENS variable
-  // TODO: Finish
-
-  const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
-
-  if (!token) return res.sendStatus(401);
-
-  try {
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-    res.set("X-Forwarded-User", decoded.user).sendStatus(200);
-  } catch (e) {
-    res.sendStatus(401);
-  }
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).render("error", {
-    title: err.message,
-    stack: err.stack,
-    url: `${req.protocol}://${req.headers.host}${
-      req.forwardedUri || req.url
-    }`.split("?")[0],
-    back_url:
-      session.redirect ||
-      `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}`.split("?")[0],
-    show_credit: !FORM_DISABLE_CREDITS,
-  });
-});
+app.use(authorization);
+app.use(errorHandler);
 
 // Start the server
 app.listen(3000, "0.0.0.0", () => {

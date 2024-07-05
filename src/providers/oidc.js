@@ -1,5 +1,5 @@
 const { Strategy: OpenIDConnectStrategy } = require("passport-openidconnect");
-const { AUTH_PREFIX } = require("../constants");
+const { AUTH_PREFIX } = require("../config/constants");
 
 const oidcProvider = (id, keyName) => ({
   name: `oidc_${id}`,

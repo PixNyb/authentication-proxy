@@ -1,5 +1,5 @@
 const LocalStrategy = require("passport-local").Strategy;
-const { AUTH_PREFIX } = require("../constants");
+const { AUTH_PREFIX } = require("../config/constants");
 const apacheMd5 = require("apache-md5");
 const fs = require("fs");
 const path = require("path");
