@@ -7,6 +7,11 @@ on:
       - development
     tags:
       - v*
+      - rc-*
+  pull_request:
+    branches:
+      - main
+      - development
 
 jobs:
   setup:
