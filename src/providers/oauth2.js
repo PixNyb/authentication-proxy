@@ -48,7 +48,7 @@ const oauth2Provider = (id, keyName) => ({
               strategy: `oauth2_${id}`,
               profile: user,
             });
-          } catch (e) {
+          } catch {
             return done(new Error("Failed to parse user profile"));
           }
         }

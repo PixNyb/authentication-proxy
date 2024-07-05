@@ -49,9 +49,29 @@ jobs:
             fi
           fi
 
+  lint:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run eslint
+        run: npm run lint
+
+  test:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: npm run test
+
   build-and-push:
     runs-on: self-hosted
-    needs: setup
+    needs: [setup, lint, test]
 
     steps:
       - name: Set up Docker Buildx

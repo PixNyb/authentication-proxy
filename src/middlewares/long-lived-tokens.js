@@ -1,3 +1,5 @@
+const { LONG_LIVED_TOKENS } = require("../config/constants");
+
 module.exports = (req, res, next) => {
   const forwardedQuery = req.forwardedUri?.split("?")[1];
   const query = req.url.split("?")[1] || forwardedQuery;

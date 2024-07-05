@@ -12,7 +12,7 @@ const {
   REFRESH_TOKEN_EXPIRES_IN,
 } = require("./config/constants");
 const { setGlobalCookies } = require("./global-cookies");
-const { get } = require("request");
+require("request");
 
 const createProviderRoutes = (app, strategies) => {
   Object.entries(strategies).forEach(([name, strategyConfig]) => {

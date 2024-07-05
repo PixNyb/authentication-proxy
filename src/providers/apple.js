@@ -1,6 +1,6 @@
 const { Strategy: AppleStrategy } = require("passport-apple");
 const { AUTH_PREFIX } = require("../config/constants");
-const { jwt } = require("jsonwebtoken");
+const jwt = require("jsonwebtoken");
 
 const appleProvider = (id, keyName) => ({
   name: `apple_${id}`,

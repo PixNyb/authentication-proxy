@@ -1,4 +1,11 @@
-module.exports = (err, req, res, next) => {
+const {
+  AUTH_HOST,
+  AUTH_PREFIX,
+  FORM_DISABLE_CREDITS,
+} = require("../config/constants");
+const session = require("express-session");
+
+module.exports = (err, req, res) => {
   console.error(err.stack);
   res.status(500).render("error", {
     title: err.message,

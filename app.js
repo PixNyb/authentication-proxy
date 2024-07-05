@@ -30,7 +30,6 @@ const {
   setGlobalCookies,
   createCookieRoutes,
 } = require("./src/global-cookies");
-const helmet = require("helmet");
 const expressEjsLayouts = require("express-ejs-layouts");
 const redirect = require("./src/redirect");
 const forwardedHeaders = require("./src/middlewares/forwarded-headers");
@@ -84,8 +83,7 @@ app.get("/healthz", (req, res) => {
 app.use(forwardedHeaders);
 app.use(requestLogger);
 
-if (LONG_LIVED_TOKENS_ENABLED)
-  app.use(longLivedTokens);
+if (LONG_LIVED_TOKENS_ENABLED) app.use(longLivedTokens);
 
 // Define routes
 const defineRoutes = (app, strategies) => {
@@ -104,15 +102,15 @@ const defineRoutes = (app, strategies) => {
 
 // Extract strategy details
 const templateStrategies = Object.entries(strategies)
-  .filter(([id, strategyConfig]) => strategyConfig.type !== "local")
-  .map(([id, strategyConfig]) => {
+  .filter(([, strategyConfig]) => strategyConfig.type !== "local")
+  .map(([, strategyConfig]) => {
     const { loginURL, displayName, fontAwesomeIcon } = strategyConfig.params;
     return { displayName, loginURL, fontAwesomeIcon };
   });
 
 const localEndpoints = Object.entries(strategies)
-  .filter(([id, strategyConfig]) => strategyConfig.type === "local")
-  .map(([id, strategyConfig]) => {
+  .filter(([, strategyConfig]) => strategyConfig.type === "local")
+  .map(([, strategyConfig]) => {
     const { displayName, loginURL } = strategyConfig.params;
     return { displayName, loginURL };
   });
@@ -150,7 +148,7 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
         : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
       [{ name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG }]
     );
-  } catch (e) {
+  } catch {
     removeGlobalCookies(
       req,
       res,
@@ -214,7 +212,7 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
       longLivedTokens: LONG_LIVED_TOKENS,
       show_credit: !FORM_DISABLE_CREDITS,
     });
-  } catch (e) {
+  } catch {
     req.session.redirect =
       req.query.redirect_url ||
       `${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`;
@@ -241,8 +239,8 @@ app.use(authorization);
 app.use(errorHandler);
 
 // Start the server
-app.listen(3000, "0.0.0.0", () => {
+const server = app.listen(3000, "0.0.0.0", () => {
   console.log("Server is running on port 3000");
 });
 
-module.exports = app;
+module.exports = { app, server };

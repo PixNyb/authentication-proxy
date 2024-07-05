@@ -1,8 +1,6 @@
 const {
   COOKIE_HOSTS,
   COOKIE_HOSTS_USE_ROOT,
-  AUTH_HOST,
-  AUTH_PREFIX,
 } = require("./config/constants");
 const redirect = require("./redirect");
 

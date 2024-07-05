@@ -42,6 +42,7 @@ const oidcProvider = (id, keyName) => ({
         profile: userProfile,
       });
     } catch (e) {
+      console.error(e);
       return done(new Error("Failed to parse user profile"));
     }
   },
