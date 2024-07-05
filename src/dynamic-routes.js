@@ -8,8 +8,8 @@ const {
   AUTH_HOST,
   AUTH_PREFIX,
   COOKIE_CONFIG,
-  ACCESS_TOKEN_EXPIRES_IN,
-  REFRESH_TOKEN_EXPIRES_IN,
+  ACCESS_TOKEN_EXPIRATION,
+  REFRESH_TOKEN_EXPIRATION,
 } = require("./config/constants");
 const { setGlobalCookies } = require("./global-cookies");
 require("request");
@@ -89,7 +89,7 @@ const createProviderRoutes = (app, strategies) => {
                 strategy: strategyConfig.name,
               },
               ACCESS_TOKEN_SECRET,
-              { expiresIn: ACCESS_TOKEN_EXPIRES_IN }
+              { expiresIn: ACCESS_TOKEN_EXPIRATION }
             );
 
             const refreshToken = jwt.sign(
@@ -98,7 +98,7 @@ const createProviderRoutes = (app, strategies) => {
                 strategy: strategyConfig.name,
               },
               REFRESH_TOKEN_SECRET,
-              { expiresIn: REFRESH_TOKEN_EXPIRES_IN }
+              { expiresIn: REFRESH_TOKEN_EXPIRATION }
             );
 
             setGlobalCookies(req, res, redirectUrl, [
@@ -106,7 +106,7 @@ const createProviderRoutes = (app, strategies) => {
                 name: ACCESS_TOKEN_NAME,
                 value: token,
                 options: {
-                  maxAge: getAgeFromExpiresIn(ACCESS_TOKEN_EXPIRES_IN),
+                  maxAge: getAgeFromExpiresIn(ACCESS_TOKEN_EXPIRATION),
                   ...COOKIE_CONFIG,
                 },
               },
@@ -114,7 +114,7 @@ const createProviderRoutes = (app, strategies) => {
                 name: REFRESH_TOKEN_NAME,
                 value: refreshToken,
                 options: {
-                  maxAge: getAgeFromExpiresIn(REFRESH_TOKEN_EXPIRES_IN),
+                  maxAge: getAgeFromExpiresIn(REFRESH_TOKEN_EXPIRATION),
                   ...COOKIE_CONFIG,
                 },
               },
