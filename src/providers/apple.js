@@ -1,6 +1,6 @@
 const { Strategy: AppleStrategy } = require("passport-apple");
-const { AUTH_PREFIX } = require("../constants");
-const {jwt} = require("jsonwebtoken");
+const { AUTH_PREFIX } = require("../config/constants");
+const jwt = require("jsonwebtoken");
 
 const appleProvider = (id, keyName) => ({
   name: `apple_${id}`,
@@ -10,7 +10,9 @@ const appleProvider = (id, keyName) => ({
     clientID: process.env[`APPLE_${keyName}_CLIENT_ID`],
     teamID: process.env[`APPLE_${keyName}_TEAM_ID`],
     keyID: process.env[`APPLE_${keyName}_KEY_ID`],
-    privateKeyLocation: process.env[`APPLE_${keyName}_PRIVATE_KEY_LOCATION`] || "/etc/auth/apple.p8",
+    privateKeyLocation:
+      process.env[`APPLE_${keyName}_PRIVATE_KEY_LOCATION`] ||
+      "/etc/auth/apple.p8",
     loginURL: `${AUTH_PREFIX}/_apple/${id}`,
     callbackURL: `${AUTH_PREFIX}/_apple/${id}/callback`,
     callbackMethod: "GET",

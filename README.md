@@ -55,8 +55,10 @@ As mentioned above, there are a few environment variables that can be used to co
 | SESSION_SECRET            | The secret used to sign the session cookie                                                            |                  |
 | ACCESS_TOKEN_NAME         | The name of the access token cookie                                                                   | `_access_token`  |
 | ACCESS_TOKEN_SECRET       | The secret used to sign the access token cookie                                                       | `secret`         |
+| ACCESS_TOKEN_EXPIRATION   | The expiration time for the access token cookie                                                       | `15m`             |
 | REFRESH_TOKEN_NAME        | The name of the refresh token cookie                                                                  | `_refresh_token` |
 | REFRESH_TOKEN_SECRET      | The secret used to sign the refresh token cookie                                                      | `refresh`        |
+| REFRESH_TOKEN_EXPIRATION  | The expiration time for the refresh token cookie                                                      | `7d`             |
 | COOKIE_SECURE             | Whether the cookies should be secure or not                                                           | `true`           |
 | COOKIE_HOSTS              | A list of hosts that the authentication proxy is available on                                         | `localhost`      |
 | COOKIE_HOSTS_USE_ROOT     | Whether the base domain should be used as the cookie domain                                           | `false`          |
@@ -67,6 +69,9 @@ As mentioned above, there are a few environment variables that can be used to co
 | FORM_ADMIN_EMAIL          | The email address of the administrator, this will be shown in the help dialog                         |                  |
 | FORM_DISABLE_CREDITS      | Whether the credits should be disabled or not                                                         | `false`          |
 | PROMETHEUS_PREFIX         | The prefix for the Prometheus metrics endpoint. Since this route is not secured, it should be random  |                  |
+
+> [!NOTE]
+> The `(ACCESS|REFRESH)_TOKEN_EXPIRATION` variables should be in the format `<duration><unit>`, where `<duration>` is a number and `<unit>` is one of `s`, `m`, `h`, `d`.
 
 > [!NOTE]
 > The `LONG_LIVED_TOKENS` variable should be in the format `name:token,name:token`. These tokens can be found after logging in to the auth service and visiting the `AUTH_HOST`.

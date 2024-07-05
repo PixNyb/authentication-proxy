@@ -1,4 +1,4 @@
-const { FORM_DISABLE_CREDITS } = require("./constants");
+const { FORM_DISABLE_CREDITS } = require("./config/constants");
 
 const redirect = (res, redirectUrl) => {
   res.status(301).render("redirect", {

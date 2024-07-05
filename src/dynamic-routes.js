@@ -8,8 +8,11 @@ const {
   AUTH_HOST,
   AUTH_PREFIX,
   COOKIE_CONFIG,
-} = require("./constants");
+  ACCESS_TOKEN_EXPIRATION,
+  REFRESH_TOKEN_EXPIRATION,
+} = require("./config/constants");
 const { setGlobalCookies } = require("./global-cookies");
+require("request");
 
 const createProviderRoutes = (app, strategies) => {
   Object.entries(strategies).forEach(([name, strategyConfig]) => {
@@ -19,8 +22,8 @@ const createProviderRoutes = (app, strategies) => {
         name,
         new strategyConfig.strategy(
           strategyConfig.params,
-          strategyConfig.verify,
-        ),
+          strategyConfig.verify
+        )
       );
 
       app.get(loginURL, (req, res, next) => {
@@ -86,7 +89,7 @@ const createProviderRoutes = (app, strategies) => {
                 strategy: strategyConfig.name,
               },
               ACCESS_TOKEN_SECRET,
-              { expiresIn: "15m" },
+              { expiresIn: ACCESS_TOKEN_EXPIRATION }
             );
 
             const refreshToken = jwt.sign(
@@ -95,19 +98,25 @@ const createProviderRoutes = (app, strategies) => {
                 strategy: strategyConfig.name,
               },
               REFRESH_TOKEN_SECRET,
-              { expiresIn: "7d" },
+              { expiresIn: REFRESH_TOKEN_EXPIRATION }
             );
 
             setGlobalCookies(req, res, redirectUrl, [
               {
                 name: ACCESS_TOKEN_NAME,
                 value: token,
-                options: { maxAge: 1000 * 60 * 15, ...COOKIE_CONFIG },
+                options: {
+                  maxAge: getAgeFromExpiresIn(ACCESS_TOKEN_EXPIRATION),
+                  ...COOKIE_CONFIG,
+                },
               },
               {
                 name: REFRESH_TOKEN_NAME,
                 value: refreshToken,
-                options: { maxAge: 1000 * 60 * 60 * 24 * 7, ...COOKIE_CONFIG },
+                options: {
+                  maxAge: getAgeFromExpiresIn(REFRESH_TOKEN_EXPIRATION),
+                  ...COOKIE_CONFIG,
+                },
               },
             ]);
           });
@@ -115,6 +124,20 @@ const createProviderRoutes = (app, strategies) => {
       });
     }
   });
+};
+
+const getAgeFromExpiresIn = (expiresIn) => {
+  // Take a token value like "15m" and return the number of seconds
+  const [value, unit] = expiresIn.match(/(\d+)(\w+)/);
+  if (!value || !unit) throw new Error("Invalid expiresIn format");
+  const seconds = {
+    s: 1,
+    m: 60,
+    h: 60 * 60,
+    d: 60 * 60 * 24,
+  }[unit[0].toLowerCase()];
+
+  return parseInt(value) * seconds;
 };
 
 module.exports = createProviderRoutes;

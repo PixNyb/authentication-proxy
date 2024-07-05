@@ -32,8 +32,10 @@ module.exports = {
   // JWT tokens
   ACCESS_TOKEN_NAME: process.env.ACCESS_TOKEN_NAME || "_access_token",
   ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || "secret",
+  ACCESS_TOKEN_EXPIRATION: process.env.ACCESS_TOKEN_EXPIRATION || "15m",
   REFRESH_TOKEN_NAME: process.env.REFRESH_TOKEN_NAME || "_refresh_token",
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "refresh",
+  REFRESH_TOKEN_EXPIRATION: process.env.REFRESH_TOKEN_EXPIRATION || "7d",
 
   COOKIE_CONFIG: {
     httpOnly: true,
