@@ -1,5 +1,5 @@
 const { Strategy: OpenIDConnectStrategy } = require("passport-openidconnect");
-const { AUTH_PREFIX } = require("../constants");
+const { AUTH_PREFIX } = require("../config/constants");
 
 const oidcProvider = (id, keyName) => ({
   name: `oidc_${id}`,
@@ -42,6 +42,7 @@ const oidcProvider = (id, keyName) => ({
         profile: userProfile,
       });
     } catch (e) {
+      console.error(e);
       return done(new Error("Failed to parse user profile"));
     }
   },

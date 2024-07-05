@@ -13,7 +13,7 @@ strategies.forEach((strategyConfig) => {
   if (strategyConfig.strategy) {
     passport.use(
       strategyConfig.name,
-      new strategyConfig.strategy(strategyConfig.params, strategyConfig.verify),
+      new strategyConfig.strategy(strategyConfig.params, strategyConfig.verify)
     );
   }
 });

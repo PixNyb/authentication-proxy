@@ -1,5 +1,5 @@
 const { Strategy: GoogleStrategy } = require("passport-google-oauth20");
-const { AUTH_PREFIX } = require("../constants");
+const { AUTH_PREFIX } = require("../config/constants");
 
 const googleProvider = (id, keyName) => ({
   name: `google_${id}`,
