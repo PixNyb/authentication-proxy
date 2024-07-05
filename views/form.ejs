@@ -32,11 +32,11 @@
     <% if (strategies.length > 1) { %>
         <div class="method-group">
             <% strategies.forEach(function(strategy) { %>
-                <div class="method-group__item button" title="Login with <%= strategy.displayName %>">
-                    <a href="<%= strategy.loginURL %>">
+                <a href="<%= strategy.loginURL %>">
+                    <div class="method-group__item button" title="Log in with <%= strategy.displayName %>">
                         <i class="fa <%= strategy.fontAwesomeIcon %>"></i>
-                    </a>
-                </div>
+                    </div>
+                </a>
             <% }); %>
             <% if (!initialEndpoint) { %>
                 <button type="button" id="help">Help</button>

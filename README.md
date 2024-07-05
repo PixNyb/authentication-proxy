@@ -125,15 +125,6 @@ The OAuth2 provider is used to authenticate users using an OAuth2 provider.
 | \_CLIENT_ID     | The client ID for the OAuth2 provider                                                                    |         |
 | \_CLIENT_SECRET | The client secret for the OAuth2 provider                                                                |         |
 
-#### GOOGLE
-
-The Google provider is used to authenticate users using Google.
-
-| Variable        | Description                               | Default |
-| --------------- | ----------------------------------------- | ------- |
-| \_CLIENT_ID     | The client ID for the Google provider     |         |
-| \_CLIENT_SECRET | The client secret for the Google provider |         |
-
 #### OIDC
 
 The OIDC provider is used to authenticate users using OpenID Connect.
@@ -146,6 +137,32 @@ The OIDC provider is used to authenticate users using OpenID Connect.
 | \_USER_URL      | The URL to the OIDC provider's user endpoint           |         |
 | \_CLIENT_ID     | The client ID for the OIDC provider                    |         |
 | \_CLIENT_SECRET | The client secret for the OIDC provider                |         |
+
+#### GOOGLE
+
+The Google provider is used to authenticate users using Google.
+
+| Variable        | Description                               | Default |
+| --------------- | ----------------------------------------- | ------- |
+| \_CLIENT_ID     | The client ID for the Google provider     |         |
+| \_CLIENT_SECRET | The client secret for the Google provider |         |
+
+#### APPLE
+
+The Apple provider is used to authenticate users using Apple ID.
+
+| Variable               | Description                                            | Default              |
+| ---------------------- | ------------------------------------------------------ | -------------------- |
+| \_CLIENT_ID            | The client ID for the Apple provider                   |                      |
+| \_TEAM_ID              | The team ID for the Apple provider                     |                      |
+| \_KEY_ID               | The key ID for the Apple provider                      |                      |
+| \_PRIVATE_KEY_LOCATION | The location of the private key for the Apple provider | `/etc/auth/apple.p8` |
+
+> [!NOTE]
+> Make sure the private key is mounted into the container at the location specified by the `PRIVATE_KEY_LOCATION` variable.
+
+> [!NOTE]
+> In order to set up this provider, you'll need to enroll in the Apple Developer Program. You can find more information [here](https://developer.apple.com/sign-in-with-apple/get-started/).
 
 ## Contributing
 
