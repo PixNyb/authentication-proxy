@@ -25,24 +25,20 @@ const oauth2Provider = (id, keyName) => ({
     const userURL = process.env[`OAUTH2_${keyName}_USER_URL`];
     const userField = process.env[`OAUTH2_${keyName}_USER_FIELD`] || "email"; // The field to use as the user identifier
     if (userURL) {
-      axios.get(
+      axios.get(userURL,
         {
-          url: userURL,
           headers: {
-            Authorization: `Bearer ${accessToken}`,
+            "Authorization": `Bearer ${accessToken}`,
             "User-Agent": "Request-Promise",
           },
-        },
-        (error, response, body) => {
-          if (error) return done(error);
-
-          if (response.statusCode !== 200)
+        }).then((response) => {
+          if (response.status !== 200)
             return done(
-              new Error(`Failed to fetch user profile: ${response.statusCode}`)
+              new Error(`Failed to fetch user profile: ${response.status}`)
             );
 
           try {
-            const user = JSON.parse(body);
+            const user = response.data;
             return done(null, {
               id: user[userField],
               strategy: `oauth2_${id}`,
@@ -51,8 +47,9 @@ const oauth2Provider = (id, keyName) => ({
           } catch {
             return done(new Error("Failed to parse user profile"));
           }
-        }
-      );
+        }).catch((error) => {
+          return done(error);
+        });
     } else
       return done(null, {
         id: profile.id,
