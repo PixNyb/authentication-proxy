@@ -1,4 +1,4 @@
-const { server } = require("../../app");
+const { stop } = require("../../app");
 
 jest.mock("jsonwebtoken");
 jest.mock("request");
@@ -43,5 +43,5 @@ describe("OAuth2 Authentication Strategy", () => {
 });
 
 afterAll(() => {
-  server.close();
+  stop();
 });
