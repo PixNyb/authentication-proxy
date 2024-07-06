@@ -238,9 +238,19 @@ defineRoutes(app, strategies);
 app.use(authorization);
 app.use(errorHandler);
 
-// Start the server
-const server = app.listen(3000, "0.0.0.0", () => {
-  console.log("Server is running on port 3000");
-});
+let server;
+const start = () => {
+  server = app.listen(3000, "0.0.0.0", () => {
+    console.log("Server is running on port 3000");
+  });
+};
 
-module.exports = { app, server };
+const stop = () => {
+  server.close();
+};
+
+process.on("SIGTERM", stop);
+
+start();
+
+module.exports = { app, server, start, stop };

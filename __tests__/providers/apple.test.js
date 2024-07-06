@@ -1,4 +1,4 @@
-const { server } = require("../../app");
+const { stop } = require("../../app");
 
 jest.mock("jsonwebtoken", () => ({
   decode: jest.fn().mockReturnValue({
@@ -51,5 +51,5 @@ describe("Apple Authentication Strategy", () => {
 });
 
 afterAll(() => {
-  server.close();
+  stop();
 });
