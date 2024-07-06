@@ -185,6 +185,8 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
     req.cookies;
   const { redirect_url } = req.query;
 
+  console.log("redirect_url", redirect_url);
+
   try {
     if (!token && !refreshToken) throw new Error("No token found");
 
