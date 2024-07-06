@@ -38,7 +38,7 @@ jobs:
         id: tag
         run: |
           if [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "TAG_NAME=$(echo ${{ github.ref_name }} | sed 's/^v//')" >> $GITHUB_OUTPUT
+            echo "TAG_NAME=$(echo ${github.ref_name} | sed 's/^v//')" >> $GITHUB_OUTPUT
           elif [[ "${{ github.ref_name }}" == "main" ]]; then
             echo "TAG_NAME=latest" >> $GITHUB_OUTPUT
           else
@@ -92,7 +92,6 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     needs: [setup, lint, test]
-    if: ${{ needs.setup.outputs.is_pr == 'false' }}
 
     steps:
       - name: Set up Docker Buildx

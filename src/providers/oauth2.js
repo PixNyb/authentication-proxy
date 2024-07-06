@@ -1,6 +1,5 @@
 const { Strategy: OAuth2Strategy } = require("passport-oauth2");
 const { AUTH_PREFIX } = require("../config/constants");
-const { default: axios } = require("axios");
 
 const oauth2Provider = (id, keyName) => ({
   name: `oauth2_${id}`,
@@ -25,7 +24,8 @@ const oauth2Provider = (id, keyName) => ({
     const userURL = process.env[`OAUTH2_${keyName}_USER_URL`];
     const userField = process.env[`OAUTH2_${keyName}_USER_FIELD`] || "email"; // The field to use as the user identifier
     if (userURL) {
-      axios.get(
+      const request = require("request");
+      request.get(
         {
           url: userURL,
           headers: {

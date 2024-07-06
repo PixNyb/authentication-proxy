@@ -1,6 +1,7 @@
 const { stop } = require("../../app");
 
 jest.mock("jsonwebtoken");
+jest.mock("request");
 
 describe("OAuth2 Authentication Strategy", () => {
   // Mock environment variables
