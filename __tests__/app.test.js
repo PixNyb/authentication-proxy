@@ -1,6 +1,6 @@
 const axios = require("axios");
 const jwt = require("jsonwebtoken");
-const { app, stop } = require("../app");
+const { stop } = require("../app");
 const {
   ACCESS_TOKEN_SECRET,
   REFRESH_TOKEN_SECRET,
