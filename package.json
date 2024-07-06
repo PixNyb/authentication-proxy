@@ -12,9 +12,9 @@
   },
   "dependencies": {
     "apache-md5": "^1.1.8",
+    "axios": "^1.7.2",
     "body-parser": "^1.20.2",
     "cookie-parser": "^1.4.6",
-    "crypto": "^1.0.1",
     "dotenv": "^16.4.5",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
@@ -28,15 +28,13 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-local": "^1.0.0",
     "passport-oauth2": "^1.8.0",
-    "passport-openidconnect": "^0.1.2",
-    "request": "^2.88.2"
+    "passport-openidconnect": "^0.1.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.6.0",
     "@types/jsonwebtoken": "^9.0.6",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.6.0",
-    "eslint-plugin-jest": "^28.6.0",
     "globals": "^15.8.0",
     "jest": "^29.7.0",
     "supertest": "^7.0.0"

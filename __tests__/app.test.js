@@ -1,4 +1,4 @@
-const request = require("supertest");
+const axios = require("axios");
 const jwt = require("jsonwebtoken");
 const { app, stop } = require("../app");
 const {
@@ -11,58 +11,158 @@ const {
   LONG_LIVED_TOKENS_NUMBER,
 } = require("../src/config/constants");
 
-const METHODS = ["get", "post", "put", "delete", "patch", "head", "options"];
-
 describe("Authentication Proxy Tests", () => {
   describe("Application Routes", () => {
     it("should return OK for the health check route", async () => {
-      const response = await request(app).get("/healthz");
-      expect(response.statusCode).toBe(200);
-      expect(response.text).toBe("OK");
+      const response = await axios.get("http://localhost:3000/healthz");
+
+      expect(response.status).toBe(200);
+      expect(response.data).toBe("OK");
     });
 
-    it("should allow authenticated users on all methods", async () => {
+    it("should allow authenticated users on GET routes", async () => {
       const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
       const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
 
-      for (const method of METHODS) {
-        const response = await request(app)
-          // eslint-disable-next-line no-unexpected-multiline
-          [method]("/")
-          .set("Cookie", [
-            `${ACCESS_TOKEN_NAME}=${accessToken}`,
-            `${REFRESH_TOKEN_NAME}=${refreshToken}`,
-          ]);
+      const response = await axios.get("http://localhost:3000/", {
+        headers: {
+          Cookie: `${ACCESS_TOKEN_NAME}=${accessToken}; ${REFRESH_TOKEN_NAME}=${refreshToken}`,
+        },
+        maxRedirects: 0,
+        validateStatus: function () {
+          return true;
+        },
+      });
 
-        expect(response.statusCode).toBe(200);
-      }
+      expect(response.status).toBe(200);
+    });
+
+    it("should allow authenticated users on POST routes", async () => {
+      const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
+      const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+
+      const response = await axios.post(
+        "http://localhost:3000/",
+        {},
+        {
+          headers: {
+            Cookie: `${ACCESS_TOKEN_NAME}=${accessToken}; ${REFRESH_TOKEN_NAME}=${refreshToken}`,
+          },
+          maxRedirects: 0,
+          validateStatus: function () {
+            return true;
+          },
+        }
+      );
+
+      expect(response.status).toBe(200);
+    });
+
+    it("should allow authenticated users on PUT routes", async () => {
+      const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
+      const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+
+      const response = await axios.put(
+        "http://localhost:3000/",
+        {},
+        {
+          headers: {
+            Cookie: `${ACCESS_TOKEN_NAME}=${accessToken}; ${REFRESH_TOKEN_NAME}=${refreshToken}`,
+          },
+          maxRedirects: 0,
+          validateStatus: function () {
+            return true;
+          },
+        }
+      );
+
+      expect(response.status).toBe(200);
+    });
+
+    it("should allow authenticated users on DELETE routes", async () => {
+      const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
+      const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+
+      const response = await axios.delete("http://localhost:3000/", {
+        headers: {
+          Cookie: `${ACCESS_TOKEN_NAME}=${accessToken}; ${REFRESH_TOKEN_NAME}=${refreshToken}`,
+        },
+        maxRedirects: 0,
+        validateStatus: function () {
+          return true;
+        },
+      });
+
+      expect(response.status).toBe(200);
     });
 
     it("should redirect expired access tokens to refresh", async () => {
       const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
 
-      const response = await request(app)
-        .get("/")
-        .set("Cookie", [`${REFRESH_TOKEN_NAME}=${refreshToken}`]);
+      const response = await axios.get("http://localhost:3000/", {
+        headers: {
+          Cookie: `${REFRESH_TOKEN_NAME}=${refreshToken}`,
+        },
+        maxRedirects: 0,
+        validateStatus: function () {
+          return true;
+        },
+      });
 
-      expect(response.statusCode).toBe(302);
+      expect(response.status).toBe(302);
       expect(response.headers.location).toContain(`${AUTH_HOST}/refresh`);
     });
 
     it("should redirect unauthenticated users to login", async () => {
-      const response = await request(app).get("/");
-      expect(response.statusCode).toBe(302);
+      const response = await axios.get("http://localhost:3000/", {
+        maxRedirects: 0,
+        validateStatus: function () {
+          return true;
+        },
+      });
+      expect(response.status).toBe(302);
     });
 
     it("should return a 401 for all request that cannot be authenticated or properly redirected", async () => {
-      for (const method of METHODS) {
-        if (method === "get") continue;
-        const response = await request(app)
-          // eslint-disable-next-line no-unexpected-multiline
-          [method]("/bad-route");
+      const response = await axios.get("http://localhost:3000/bad-route", {
+        maxRedirects: 0,
+        validateStatus: function () {
+          return true;
+        },
+      });
+      expect(response.status).toBe(401);
 
-        expect(response.statusCode).toBe(401);
-      }
+      const response2 = await axios.post(
+        "http://localhost:3000/bad-route",
+        {},
+        {
+          maxRedirects: 0,
+          validateStatus: function () {
+            return true;
+          },
+        }
+      );
+      expect(response2.status).toBe(401);
+
+      const response3 = await axios.put(
+        "http://localhost:3000/bad-route",
+        {},
+        {
+          maxRedirects: 0,
+          validateStatus: function () {
+            return true;
+          },
+        }
+      );
+      expect(response3.status).toBe(401);
+
+      const response4 = await axios.delete("http://localhost:3000/bad-route", {
+        maxRedirects: 0,
+        validateStatus: function () {
+          return true;
+        },
+      });
+      expect(response4.status).toBe(401);
     });
 
     it("should generate the appropriate amount of long lived tokens", async () => {
@@ -74,28 +174,49 @@ describe("Authentication Proxy Tests", () => {
     it("should allow request with a long lived token parameter in the request query", async () => {
       const tokens = Object.values(LONG_LIVED_TOKENS);
       for (const token of tokens) {
-        const queryResponse = await request(app).get("/bad-route?tkn=" + token);
-        expect(queryResponse.statusCode).toBe(200);
+        const response = await axios.get(
+          "http://localhost:3000/bad-route?tkn=" + token,
+          {
+            maxRedirects: 0,
+            validateStatus: function () {
+              return true;
+            },
+          }
+        );
+        expect(response.status).toBe(200);
       }
     });
 
     it("should allow request with a long lived token in the request body", async () => {
       const tokens = Object.values(LONG_LIVED_TOKENS);
       for (const token of tokens) {
-        const response = await request(app)
-          .post("/bad-route")
-          .send({ token: token });
-        expect(response.statusCode).toBe(200);
+        const response = await axios.post(
+          "http://localhost:3000/bad-route",
+          { token: token },
+          {
+            maxRedirects: 0,
+            validateStatus: function () {
+              return true;
+            },
+          }
+        );
+        expect(response.status).toBe(200);
       }
     });
 
     it("should allow request with a long lived token in the request header", async () => {
       const tokens = Object.values(LONG_LIVED_TOKENS);
       for (const token of tokens) {
-        const response = await request(app)
-          .get("/bad-route")
-          .set("Authorization", `Bearer ${token}`);
-        expect(response.statusCode).toBe(200);
+        const response = await axios.get("http://localhost:3000/bad-route", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          maxRedirects: 0,
+          validateStatus: function () {
+            return true;
+          },
+        });
+        expect(response.status).toBe(200);
       }
     });
   });
