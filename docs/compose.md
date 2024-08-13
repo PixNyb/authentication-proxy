@@ -1,6 +1,6 @@
 # Docker Compose example
 
-This directory contains examples of how to deploy the authentication proxy in a Docker Swarm environment.
+This directory contains examples of how to deploy the authentication proxy in a Docker compose environment.
 
 ## Prerequisites
 
