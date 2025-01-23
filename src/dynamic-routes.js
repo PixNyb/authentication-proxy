@@ -43,7 +43,7 @@ const createProviderRoutes = (app, strategies) => {
           if (!user) {
             return req.xhr
               ? res.status(401).json({ error: info.message })
-              : res.redirect("/?error=Invalid%20credentials");
+              : res.redirect(`${AUTH_PREFIX}/?error=Invalid%20credentials`);
           }
 
           // Apply domain and user whitelists
@@ -55,7 +55,7 @@ const createProviderRoutes = (app, strategies) => {
             if (!domainWhitelist.includes(emailDomain))
               return req.xhr
                 ? res.status(401).json({ error: "Unauthorized domain" })
-                : res.redirect("/?error=Unauthorized%20domain");
+                : res.redirect(`${AUTH_PREFIX}/?error=Unauthorized%20domain`);
           }
 
           if (strategyConfig.params.userWhitelist) {
@@ -65,7 +65,7 @@ const createProviderRoutes = (app, strategies) => {
             if (!userWhitelist.includes(user.id))
               return req.xhr
                 ? res.status(401).json({ error: "Unauthorized user" })
-                : res.redirect("/?error=Unauthorized%20user");
+                : res.redirect(`${AUTH_PREFIX}/?error=Unauthorized%20user`);
           }
 
           let redirectUrl = `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`;

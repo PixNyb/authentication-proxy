@@ -6,20 +6,31 @@ const jwt = require("jsonwebtoken");
 const {
   ACCESS_TOKEN_NAME,
   ACCESS_TOKEN_SECRET,
+  AUTH_PREFIX,
+  PROMETHEUS_PREFIX,
 } = require("../config/constants");
+const strategies = require("../strategies");
 
 module.exports = (req, res) => {
-  // const path = (req.forwardedUri || req.url).split("?")[0];
-  // const providerRoutes = Object.values(strategies).reduce((acc, strategy) => {
-  //   if (strategy.params.loginURL) acc.push(strategy.params.loginURL);
-  //   if (strategy.params.callbackURL) acc.push(strategy.params.callbackURL);
-  //   return acc;
-  // }, []);
+  const path = (req.forwardedUri || req.url).split("?")[0];
+  const applicationRoutes = [
+    `/healthz`,
+    `${AUTH_PREFIX}/`,
+    `${AUTH_PREFIX}/refresh`,
+    `${AUTH_PREFIX}/logout`,
+    `${AUTH_PREFIX}/set-cookies`,
+    `${AUTH_PREFIX}/remove-cookies`,
+    `${PROMETHEUS_PREFIX}/metrics`
+  ]
+  const providerRoutes = Object.values(strategies).reduce((acc, strategy) => {
+    if (strategy.params.loginURL) acc.push(strategy.params.loginURL);
+    if (strategy.params.callbackURL) acc.push(strategy.params.callbackURL);
+    return acc;
+  }, []);
 
-  // const appRoutes = ["/set-cookies", "/remove-cookies", "/refresh", "/logout"];
-
-  //   if (providerRoutes.includes(path) || appRoutes.includes(path))
-  //     return res.sendStatus(200);
+  if (providerRoutes.includes(path) || applicationRoutes.includes(path)) {
+    return res.sendStatus(200);
+  }
 
   const { [ACCESS_TOKEN_NAME]: token } = req.cookies;
 
