@@ -13,7 +13,7 @@ const strategies = require("../strategies");
 
 module.exports = (req, res) => {
   const path = (req.forwardedUri || req.url).split("?")[0];
-  const applicationRoutes = [
+  let applicationRoutes = [
     `/healthz`,
     `${AUTH_PREFIX}/`,
     `${AUTH_PREFIX}/refresh`,
@@ -22,11 +22,15 @@ module.exports = (req, res) => {
     `${AUTH_PREFIX}/remove-cookies`,
     `${PROMETHEUS_PREFIX}/metrics`
   ]
-  const providerRoutes = Object.values(strategies).reduce((acc, strategy) => {
-    if (strategy.params.loginURL) acc.push(strategy.params.loginURL);
-    if (strategy.params.callbackURL) acc.push(strategy.params.callbackURL);
-    return acc;
-  }, []);
+  let providerRoutes = [];
+  Object.entries(strategies).forEach(([, strategyConfig]) => {
+    const { loginURL, callbackURL } = strategyConfig.params;
+    providerRoutes.push(loginURL);
+    providerRoutes.push(callbackURL);
+  });
+
+  applicationRoutes = [...new Set(applicationRoutes)];
+  providerRoutes = [...new Set(providerRoutes)];
 
   if (providerRoutes.includes(path) || applicationRoutes.includes(path)) {
     return res.sendStatus(200);
