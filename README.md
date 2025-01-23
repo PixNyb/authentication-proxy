@@ -55,7 +55,7 @@ As mentioned above, there are a few environment variables that can be used to co
 | SESSION_SECRET            | The secret used to sign the session cookie                                                            |                  |
 | ACCESS_TOKEN_NAME         | The name of the access token cookie                                                                   | `_access_token`  |
 | ACCESS_TOKEN_SECRET       | The secret used to sign the access token cookie                                                       | `secret`         |
-| ACCESS_TOKEN_EXPIRATION   | The expiration time for the access token cookie                                                       | `15m`             |
+| ACCESS_TOKEN_EXPIRATION   | The expiration time for the access token cookie                                                       | `15m`            |
 | REFRESH_TOKEN_NAME        | The name of the refresh token cookie                                                                  | `_refresh_token` |
 | REFRESH_TOKEN_SECRET      | The secret used to sign the refresh token cookie                                                      | `refresh`        |
 | REFRESH_TOKEN_EXPIRATION  | The expiration time for the refresh token cookie                                                      | `7d`             |
@@ -168,6 +168,18 @@ The Apple provider is used to authenticate users using Apple ID.
 
 > [!NOTE]
 > In order to set up this provider, you'll need to enroll in the Apple Developer Program. You can find more information [here](https://developer.apple.com/sign-in-with-apple/get-started/).
+
+#### LDAP
+
+The LDAP provider is used to authenticate users against an LDAP server.
+
+| Variable           | Description                              | Default |
+| ------------------ | ---------------------------------------- | ------- |
+| \_URL              | The URL to the LDAP server               |         |
+| \_BIND_DN          | The bind DN for the LDAP server          |         |
+| \_BIND_CREDENTIALS | The bind credentials for the LDAP server |         |
+| \_SEARCH_BASE      | The search base for the LDAP server      |         |
+| \_SEARCH_FILTER    | The search filter for the LDAP server    |         |
 
 ## Contributing
 

@@ -9,6 +9,7 @@ const passport = require("./src/passport-setup");
 const session = require("express-session");
 const strategies = require("./src/strategies");
 const createProviderRoutes = require("./src/dynamic-routes");
+// const helmet = require("helmet");
 const {
   ACCESS_TOKEN_NAME,
   REFRESH_TOKEN_NAME,
@@ -45,7 +46,7 @@ app.set("layout", "./layouts/page");
 app.set("view engine", "ejs");
 app.set("layout extractScripts", true);
 
-// Middleware
+// Security Middleware
 // app.use(
 //   helmet.contentSecurityPolicy({
 //     directives: {
@@ -53,8 +54,10 @@ app.set("layout extractScripts", true);
 //       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", AUTH_HOST],
 //       formAction: [AUTH_HOST],
 //     },
-//   }),
+//   })
 // );
+
+// Monitoring Middleware
 app.use(
   promBundle({
     includeMethod: true,
@@ -62,6 +65,8 @@ app.use(
     metricsPath: `${PROMETHEUS_PREFIX}/metrics`,
   })
 );
+
+// Other Middleware
 app.use(express.json());
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -148,7 +153,8 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
         : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
       [{ name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG }]
     );
-  } catch {
+  } catch (error) {
+    console.error("Error verifying refresh token:", error);
     removeGlobalCookies(
       req,
       res,
@@ -194,11 +200,9 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
         .redirect(
           redirect_url
             ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${redirect_url}`
-            : `${
-                req.protocol
-              }://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${
-                req.protocol
-              }://${req.headers.host}${req.forwardedUri || ""}`
+            : `${req.protocol
+            }://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${req.protocol
+            }://${req.headers.host}${req.forwardedUri || ""}`
         );
 
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
@@ -212,7 +216,8 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
       longLivedTokens: LONG_LIVED_TOKENS,
       show_credit: !FORM_DISABLE_CREDITS,
     });
-  } catch {
+  } catch (error) {
+    console.error("Error verifying access token:", error);
     req.session.redirect =
       req.query.redirect_url ||
       `${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`;
