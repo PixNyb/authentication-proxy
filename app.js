@@ -9,7 +9,7 @@ const passport = require("./src/passport-setup");
 const session = require("express-session");
 const strategies = require("./src/strategies");
 const createProviderRoutes = require("./src/dynamic-routes");
-// const helmet = require("helmet");
+const helmet = require("helmet");
 const {
   ACCESS_TOKEN_NAME,
   REFRESH_TOKEN_NAME,
@@ -42,20 +42,21 @@ const authorization = require("./src/middlewares/authorization");
 // Initialize app
 const app = express();
 app.use(expressEjsLayouts);
+app.use(express.static(__dirname + '/public'));
 app.set("layout", "./layouts/page");
 app.set("view engine", "ejs");
 app.set("layout extractScripts", true);
 
 // Security Middleware
-// app.use(
-//   helmet.contentSecurityPolicy({
-//     directives: {
-//       defaultSrc: ["'self'"],
-//       scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", AUTH_HOST],
-//       formAction: [AUTH_HOST],
-//     },
-//   })
-// );
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", AUTH_HOST],
+      formAction: [AUTH_HOST],
+    },
+  })
+);
 
 // Monitoring Middleware
 app.use(

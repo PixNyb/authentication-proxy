@@ -1,0 +1,7 @@
+*.md
+.github
+__tests__
+docs
+.nvmrc
+eslint.config.mjs
+node_modules
