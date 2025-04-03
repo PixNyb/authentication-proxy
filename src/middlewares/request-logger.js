@@ -1,6 +1,16 @@
 module.exports = (req, res, next) => {
-  console.log(
-    `[${new Date().toISOString()}] - ${req.headers.host}: ${req.method} ${req.url} - ${req.forwardedUri || "No forwarded URI"}`,
-  );
+  const isForwarded = req.headers["x-forwarded-for"] || req.headers["x-forwarded-host"];
+  const logTemplate = '[%s] (%s) %s - %s %s - %s';
+  const urlWithoutQuery = req.url.split('?')[0];
+  const logArgs = [
+    new Date().toISOString(),
+    isForwarded ? req.forward.host : 'local',
+    isForwarded ? req.forward.ip : req.ip,
+    isForwarded ? req.forward.method : req.method,
+    urlWithoutQuery,
+    req.forward.uri || "N/A",
+  ];
+
+  console.log(logTemplate, ...logArgs);
   next();
 };

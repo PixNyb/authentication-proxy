@@ -15,4 +15,4 @@ CMD ["node", "app.js"]
 
 HEALTHCHECK --interval=5s --timeout=5s --start-period=1s --retries=15 CMD curl -f http://localhost:3000/healthz || exit 1
 
-EXPOSE 80
+EXPOSE 3000
