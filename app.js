@@ -38,6 +38,7 @@ const requestLogger = require("./src/middlewares/request-logger");
 const longLivedTokens = require("./src/middlewares/long-lived-tokens");
 const errorHandler = require("./src/middlewares/error-handler");
 const authorization = require("./src/middlewares/authorization");
+const { addRedirectQuery, getRedirectUrl } = require("./src/utils/helpers");
 
 // Initialize app
 const app = express();
@@ -124,19 +125,12 @@ const localEndpoints = Object.entries(strategies)
 // Refresh Token Route
 app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
   if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-    return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
+    return redirect(res, addRedirectQuery(req, `/refresh`));
 
   const { [REFRESH_TOKEN_NAME]: refreshToken } = req.cookies;
-  const { redirect_url } = req.query;
 
   if (!refreshToken)
-    return res
-      .status(401)
-      .redirect(
-        redirect_url
-          ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
-          : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`
-      );
+    return res.status(401).send("Refresh token missing or invalid.");
 
   try {
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
@@ -149,19 +143,14 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
     setGlobalCookies(
       req,
       res,
-      redirect_url
-        ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
-        : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+      addRedirectQuery(req, `/`),
       [{ name: ACCESS_TOKEN_NAME, value: token, options: COOKIE_CONFIG }]
     );
-  } catch (error) {
-    console.error("Error verifying refresh token:", error);
+  } catch {
     removeGlobalCookies(
       req,
       res,
-      redirect_url
-        ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
-        : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+      addRedirectQuery(req, `/`),
       [{ name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG }]
     );
   }
@@ -170,15 +159,12 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
 // Logout Route
 app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
   if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-    return res.redirect(`${req.protocol}://${AUTH_HOST}${req.url}`);
+    return redirect(res, addRedirectQuery(req, `/logout`));
 
-  const { redirect_url } = req.query;
   removeGlobalCookies(
     req,
     res,
-    redirect_url
-      ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${redirect_url}`
-      : `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`,
+    addRedirectQuery(req, `/`),
     [
       { name: ACCESS_TOKEN_NAME, options: COOKIE_CONFIG },
       { name: REFRESH_TOKEN_NAME, options: COOKIE_CONFIG },
@@ -186,30 +172,43 @@ app.get(`${AUTH_PREFIX}/logout`, (req, res) => {
   );
 });
 
+// Login Route
+app.get(`${AUTH_PREFIX}/login`, (req, res) => {
+  req.session.redirect_url = getRedirectUrl(req);
+
+  if (AUTH_HOST && req.headers.host !== AUTH_HOST)
+    return redirect(res, addRedirectQuery(req, `/login`));
+
+  res.status(200).render("form", {
+    title: FORM_TITLE,
+    strategies: templateStrategies,
+    endpoints: localEndpoints,
+    initialEndpoint: localEndpoints[0] ? localEndpoints[0].loginURL : null,
+    admin_text: FORM_ADMIN_TEXT,
+    show_credit: !FORM_DISABLE_CREDITS,
+  });
+});
+
 // Authentication Route
 app.get(`${AUTH_PREFIX}/`, (req, res) => {
   const { [ACCESS_TOKEN_NAME]: token, [REFRESH_TOKEN_NAME]: refreshToken } =
     req.cookies;
-  const { redirect_url } = req.query;
 
   try {
     if (!token && !refreshToken) throw new Error("No token found");
 
-    if (!token && refreshToken)
-      return res
-        .status(301)
-        .redirect(
-          redirect_url
-            ? `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${redirect_url}`
-            : `${req.protocol
-            }://${AUTH_HOST}${AUTH_PREFIX}/refresh?redirect_url=${req.protocol
-            }://${req.headers.host}${req.forwardedUri || ""}`
-        );
+    let decoded = null;
+    if (token)
+      try {
+        decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+      } catch {
+        decoded = null;
+      }
 
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    if (!decoded && refreshToken)
+      return redirect(res, addRedirectQuery(req, `/refresh`));
+
     res.status(200).set("X-Forwarded-User", decoded.user);
-
-    if (redirect_url) return redirect(res, redirect_url);
 
     res.render("logged-in", {
       title: "Logged In",
@@ -217,25 +216,8 @@ app.get(`${AUTH_PREFIX}/`, (req, res) => {
       longLivedTokens: LONG_LIVED_TOKENS,
       show_credit: !FORM_DISABLE_CREDITS,
     });
-  } catch (error) {
-    console.error("Error verifying access token:", error);
-    req.session.redirect =
-      req.query.redirect_url ||
-      `${req.protocol}://${req.headers.host}${req.forwardedUri || ""}`;
-
-    if (AUTH_HOST && req.headers.host !== AUTH_HOST)
-      return res.redirect(
-        `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/?redirect_url=${req.session.redirect}`
-      );
-
-    res.status(401).render("form", {
-      title: FORM_TITLE,
-      strategies: templateStrategies,
-      endpoints: localEndpoints,
-      initialEndpoint: localEndpoints[0] ? localEndpoints[0].loginURL : null,
-      admin_text: FORM_ADMIN_TEXT,
-      show_credit: !FORM_DISABLE_CREDITS,
-    });
+  } catch {
+    return redirect(res, addRedirectQuery(req, `/login`));
   }
 });
 
