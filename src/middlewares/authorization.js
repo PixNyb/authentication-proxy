@@ -12,7 +12,7 @@ const {
 const strategies = require("../strategies");
 
 module.exports = (req, res) => {
-  const path = (req.forward.uri || req.forward.url).split("?")[0];
+  const path = (req.forward.uri || req.url).split("?")[0];
   let applicationRoutes = [
     `/healthz`,
     `${AUTH_PREFIX}/`,
