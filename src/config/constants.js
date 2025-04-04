@@ -27,14 +27,14 @@ function generateTokens() {
 module.exports = {
   AUTH_PREFIX: process.env.AUTH_PREFIX || "",
   AUTH_HOST: process.env.AUTH_HOST || "localhost",
-  SESSION_SECRET: process.env.SESSION_SECRET || "keyboard cat",
+  SESSION_SECRET: process.env.SESSION_SECRET || crypto.randomBytes(64).toString("hex"),
 
   // JWT tokens
   ACCESS_TOKEN_NAME: process.env.ACCESS_TOKEN_NAME || "_access_token",
-  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || "secret",
+  ACCESS_TOKEN_SECRET: process.env.ACCESS_TOKEN_SECRET || crypto.randomBytes(64).toString("hex"),
   ACCESS_TOKEN_EXPIRATION: process.env.ACCESS_TOKEN_EXPIRATION || "15m",
   REFRESH_TOKEN_NAME: process.env.REFRESH_TOKEN_NAME || "_refresh_token",
-  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || "refresh",
+  REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || crypto.randomBytes(64).toString("hex"),
   REFRESH_TOKEN_EXPIRATION: process.env.REFRESH_TOKEN_EXPIRATION || "7d",
 
   COOKIE_CONFIG: {
@@ -49,14 +49,15 @@ module.exports = {
     : [process.env.AUTH_HOST || "localhost"],
   COOKIE_HOSTS_USE_ROOT:
     parseBoolean(process.env.COOKIE_HOSTS_USE_ROOT) || false,
+  COOKIE_MODIFY_SECRET:
+    process.env.COOKIE_MODIFY_SECRET || crypto.randomBytes(64).toString("hex"),
 
   // Form properties
   FORM_TITLE: process.env.FORM_TITLE || "Login",
   FORM_ADMIN_EMAIL: process.env.FORM_ADMIN_EMAIL || "",
   FORM_ADMIN_TEXT: process.env.FORM_ADMIN_EMAIL
-    ? `Please contact the administrator at <a href="mailto:${
-        process.env.FORM_ADMIN_EMAIL || ""
-      }">${process.env.FORM_ADMIN_EMAIL || ""}</a> for access.`
+    ? `Please contact the administrator at <a href="mailto:${process.env.FORM_ADMIN_EMAIL || ""
+    }">${process.env.FORM_ADMIN_EMAIL || ""}</a> for access.`
     : "You're on your own!",
   FORM_DISABLE_CREDITS: parseBoolean(process.env.FORM_DISABLE_CREDITS) || false,
 

@@ -97,6 +97,7 @@ jobs:
       ACCESS_TOKEN_SECRET: test_secret
       REFRESH_TOKEN_SECRET: test_refresh_secret
       LOCAL_HTPASSWD_USERS: testuser:$apr1$O8Mf7wjR$mNmtP69.Xvv6YYG5JXixd/
+      LONG_LIVED_TOKENS_ENABLED: true
 
     steps:
       - name: Checkout code

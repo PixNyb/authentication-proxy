@@ -2,15 +2,20 @@ const {
   COOKIE_HOSTS,
   COOKIE_HOSTS_USE_ROOT,
   AUTH_PREFIX,
+  COOKIE_MODIFY_SECRET,
 } = require("./config/constants");
 const redirect = require("./redirect");
+const { generateSignedData, verifySignedData } = require("./utils/helpers");
 
 const setGlobalCookies = (req, res, redirectUrl, cookies) => {
   const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
     const url = new URL(`${AUTH_PREFIX}/set-cookies`, `${req.protocol}://${domain}`);
-    url.searchParams.append("c", JSON.stringify(cookies));
-    url.searchParams.append("u", redirectUrl);
-    url.searchParams.append("i", index);
+    const token = generateSignedData(
+      { cookies: JSON.stringify(cookies), redirectUrl, index },
+      COOKIE_MODIFY_SECRET
+    );
+
+    url.searchParams.append("t", token);
 
     return url.toString();
   });
@@ -25,9 +30,12 @@ const setGlobalCookies = (req, res, redirectUrl, cookies) => {
 const removeGlobalCookies = (req, res, redirectUrl, cookies) => {
   const cookieUrls = COOKIE_HOSTS.map((domain, index) => {
     const url = new URL(`${AUTH_PREFIX}/remove-cookies`, `${req.protocol}://${domain}`);
-    url.searchParams.append("c", JSON.stringify(cookies));
-    url.searchParams.append("u", redirectUrl);
-    url.searchParams.append("i", index);
+    const token = generateSignedData(
+      { cookies: JSON.stringify(cookies), redirectUrl, index },
+      COOKIE_MODIFY_SECRET
+    );
+
+    url.searchParams.append("t", token);
 
     return url.toString();
   });
@@ -41,10 +49,15 @@ const removeGlobalCookies = (req, res, redirectUrl, cookies) => {
 
 const createCookieRoutes = (app) => {
   app.get(`${AUTH_PREFIX}/set-cookies`, (req, res) => {
-    const { c, u, i } = req.query; // c = cookies, u = redirect_url, i = index
-    const index = parseInt(i);
-    const cookies = JSON.parse(c);
-    const redirect_url = u;
+    console.log("Setting cookies", COOKIE_MODIFY_SECRET);
+    const token = req.query.t;
+    const decoded = verifySignedData(token, COOKIE_MODIFY_SECRET);
+    if (!decoded)
+      return res.status(400).json({ error: "Invalid token" });
+
+    let { cookies, redirectUrl, index } = decoded;
+    index = parseInt(index);
+    cookies = JSON.parse(cookies);
 
     let domain = req.hostname;
     if (COOKIE_HOSTS_USE_ROOT) {
@@ -60,23 +73,30 @@ const createCookieRoutes = (app) => {
     });
 
     if (index == COOKIE_HOSTS.length - 1) {
-      redirect(res, redirect_url || `${AUTH_PREFIX}/`);
+      redirect(res, redirectUrl || `${AUTH_PREFIX}/`);
     } else {
       const next_domain = COOKIE_HOSTS[index + 1];
       const url = new URL(`${AUTH_PREFIX}/set-cookies`, `http://${next_domain}`);
-      url.searchParams.append("c", c);
-      url.searchParams.append("i", index + 1);
-      url.searchParams.append("u", u);
+      const token = generateSignedData(
+        { cookies: JSON.stringify(cookies), redirectUrl, index: index + 1 },
+        COOKIE_MODIFY_SECRET
+      );
+
+      url.searchParams.append("t", token);
 
       redirect(res, url.toString());
     }
   });
 
   app.get(`${AUTH_PREFIX}/remove-cookies`, (req, res) => {
-    const { c, u, i } = req.query; // c = cookies, u = redirect_url, i = index
-    const index = parseInt(i);
-    const cookies = JSON.parse(c);
-    const redirect_url = u;
+    const token = req.query.t;
+    const decoded = verifySignedData(token, COOKIE_MODIFY_SECRET);
+    if (!decoded)
+      return res.status(400).json({ error: "Invalid token" });
+
+    let { cookies, redirectUrl, index } = decoded;
+    index = parseInt(index);
+    cookies = JSON.parse(cookies);
 
     let domain = req.hostname;
     if (COOKIE_HOSTS_USE_ROOT) {
@@ -92,13 +112,16 @@ const createCookieRoutes = (app) => {
     });
 
     if (index == COOKIE_HOSTS.length - 1) {
-      redirect(res, redirect_url || `${AUTH_PREFIX}/`);
+      redirect(res, redirectUrl || `${AUTH_PREFIX}/`);
     } else {
       const next_domain = COOKIE_HOSTS[index + 1];
       const url = new URL(`${AUTH_PREFIX}/remove-cookies`, `http://${next_domain}`);
-      url.searchParams.append("c", c);
-      url.searchParams.append("i", index + 1);
-      url.searchParams.append("u", u);
+      const token = generateSignedData(
+        { cookies: JSON.stringify(cookies), redirectUrl, index: index + 1 },
+        COOKIE_MODIFY_SECRET
+      );
+
+      url.searchParams.append("t", token);
 
       redirect(res, url.toString());
     }

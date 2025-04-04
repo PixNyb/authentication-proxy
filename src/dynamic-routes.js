@@ -12,6 +12,7 @@ const {
   REFRESH_TOKEN_EXPIRATION,
 } = require("./config/constants");
 const { setGlobalCookies } = require("./global-cookies");
+const redirect = require("./redirect");
 
 const createProviderRoutes = (app, strategies) => {
   Object.entries(strategies).forEach(([name, strategyConfig]) => {
@@ -43,7 +44,7 @@ const createProviderRoutes = (app, strategies) => {
           if (!user) {
             return req.xhr
               ? res.status(401).json({ error: info.message })
-              : res.redirect(`${AUTH_PREFIX}/login?error=Invalid%20credentials`);
+              : redirect(res, `${AUTH_PREFIX}/login?error=Invalid%20credentials`);
           }
 
           // Apply domain and user whitelists
@@ -55,7 +56,7 @@ const createProviderRoutes = (app, strategies) => {
             if (!domainWhitelist.includes(emailDomain))
               return req.xhr
                 ? res.status(401).json({ error: "Unauthorized domain" })
-                : res.redirect(`${AUTH_PREFIX}/login?error=Unauthorized%20domain`);
+                : redirect(res, `${AUTH_PREFIX}/login?error=Unauthorized%20domain`);
           }
 
           if (strategyConfig.params.userWhitelist) {
@@ -65,7 +66,7 @@ const createProviderRoutes = (app, strategies) => {
             if (!userWhitelist.includes(user.id))
               return req.xhr
                 ? res.status(401).json({ error: "Unauthorized user" })
-                : res.redirect(`${AUTH_PREFIX}/login?error=Unauthorized%20user`);
+                : redirect(res, `${AUTH_PREFIX}/login?error=Unauthorized%20user`);
           }
 
           let redirectUrl = `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`;

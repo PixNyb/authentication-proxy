@@ -122,4 +122,27 @@ describe("Authentication Proxy Tests", () => {
             cy.url().should("include", "http://example.com/some/path");
         });
     });
+
+    it("should handle missing refresh token gracefully", () => {
+        cy.visit({
+            method: "GET",
+            url: `/refresh`,
+            failOnStatusCode: false,
+        });
+
+        cy.url().should("include", "/login");
+    });
+
+    it("should handle invalid refresh token", () => {
+        cy.setCookie("_refresh_token", "invalid_token");
+
+        cy.visit({
+            method: "GET",
+            url: `/refresh`,
+            failOnStatusCode: false,
+        });
+
+        cy.url().should("include", "/login");
+        cy.getCookie("_refresh_token").should("not.exist");
+    });
 });

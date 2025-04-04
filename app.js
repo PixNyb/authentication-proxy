@@ -129,10 +129,10 @@ app.get(`${AUTH_PREFIX}/refresh`, async (req, res) => {
 
   const { [REFRESH_TOKEN_NAME]: refreshToken } = req.cookies;
 
-  if (!refreshToken)
-    return res.status(401).send("Refresh token missing or invalid.");
-
   try {
+    if (!refreshToken)
+      throw new Error("No refresh token found");
+
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
     const token = jwt.sign(
       { user: decoded.user, strategy: decoded.strategy },

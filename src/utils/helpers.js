@@ -1,3 +1,4 @@
+const jwt = require("jsonwebtoken");
 const { AUTH_PREFIX, AUTH_HOST } = require("../config/constants");
 
 const getRedirectUrl = (req) => {
@@ -28,7 +29,26 @@ const addRedirectQuery = (req, url) => {
     return url;
 };
 
+const generateSignedData = (payload, secret) => {
+    const token = jwt.sign(
+        payload, secret, { expiresIn: "5m" }
+    );
+
+    return token;
+};
+
+const verifySignedData = (token, secret) => {
+    try {
+        const decoded = jwt.verify(token, secret);
+        return decoded;
+    } catch {
+        return null;
+    }
+};
+
 module.exports = {
     getRedirectUrl,
     addRedirectQuery,
+    generateSignedData,
+    verifySignedData,
 };
