@@ -49,7 +49,6 @@ const removeGlobalCookies = (req, res, redirectUrl, cookies) => {
 
 const createCookieRoutes = (app) => {
   app.get(`${AUTH_PREFIX}/set-cookies`, (req, res) => {
-    console.log("Setting cookies", COOKIE_MODIFY_SECRET);
     const token = req.query.t;
     const decoded = verifySignedData(token, COOKIE_MODIFY_SECRET);
     if (!decoded)
