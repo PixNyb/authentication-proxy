@@ -1,5 +1,5 @@
 const LdapStrategy = require('passport-ldapauth').Strategy;
-const { AUTH_PREFIX } = require('../config/constants');
+const { AUTH_PREFIX } = require("../utils/constants");
 
 const ldapProvider = (id, keyName) => ({
   name: `ldap_${id}`,

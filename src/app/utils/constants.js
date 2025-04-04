@@ -67,8 +67,5 @@ module.exports = {
   LONG_LIVED_TOKENS_NUMBER: parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 6,
   LONG_LIVED_TOKENS: process.env.LONG_LIVED_TOKENS
     ? processTokens(process.env.LONG_LIVED_TOKENS)
-    : generateTokens(),
-
-  // Metrics
-  PROMETHEUS_PREFIX: process.env.PROMETHEUS_PREFIX || "",
+    : generateTokens()
 };

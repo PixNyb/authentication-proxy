@@ -6,7 +6,7 @@
   "author": "Roël Couwenberg <contact@roelc.me>",
   "license": "ISC",
   "scripts": {
-    "start": "node app.js",
+    "start": "node index.js",
     "test": "jest",
     "lint": "eslint ."
   },

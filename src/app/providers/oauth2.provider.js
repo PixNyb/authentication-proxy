@@ -1,5 +1,5 @@
 const { Strategy: OAuth2Strategy } = require("passport-oauth2");
-const { AUTH_PREFIX } = require("../config/constants");
+const { AUTH_PREFIX } = require("../utils/constants");
 const { default: axios } = require("axios");
 
 const oauth2Provider = (id, keyName) => ({

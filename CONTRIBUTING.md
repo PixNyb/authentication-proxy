@@ -6,17 +6,26 @@ Contributions are welcome! In order to get started, please fork the repository a
 
 To get started with local development, the [Docker Compose](/docs/compose.md) example is a good place to start. This will allow you to run the authentication proxy locally and test your changes.
 
-Make sure to run `make build` to get the necessary dependencies.
-
 ### Running Standalone
 
 The authentication proxy can be run standalone as well. This is useful for debugging and testing. To get started, you will need to have [Node.js](https://nodejs.org/) installed.
 
 1. Clone the repository
+2. Install the dependencies
+   ```bash
+   npm install
+   ```
+3. Create a `.env` file in the root of the repository. You can use the `.env.example` file as a template.
+4. Start the application
+   ```bash
+   npm start
+   ```
+5. Open your browser and go to `http://localhost:3000`
+6. You should see the authentication proxy running.
 
 ## Provider Development
 
-In order to add a new provider, simply create a new file in the `src/providers/` directory. This file should contain an implementation using a [Passport.js](http://www.passportjs.org/) strategy. New providers will automatically be discovered. Look at the existing providers for examples.
+In order to add a new provider, simply create a new file in the `src/app/providers/` directory. This file should contain an implementation using a [Passport.js](http://www.passportjs.org/) strategy and be named using the following convention: `<provider>.provider.js`. New providers will automatically be discovered. Look at the existing providers for examples.
 
 Implementations without a corresponding Passport.js strategy may be possible, but is not tested or supported.
 

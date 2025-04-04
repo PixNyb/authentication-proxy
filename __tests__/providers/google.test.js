@@ -1,4 +1,4 @@
-const { stop } = require("../../app");
+const { stop } = require("../../index");
 
 jest.mock("jsonwebtoken");
 
@@ -11,7 +11,7 @@ describe("Google Authentication Strategy", () => {
   process.env.GOOGLE_TEST_USER_WHITELIST = "user@example.com";
   process.env.GOOGLE_TEST_DISPLAY_NAME = "Test Google";
   process.env.GOOGLE_TEST_ICON = "test-icon";
-  const googleProvider = require("../../src/providers/google");
+  const googleProvider = require("../../src/app/providers/google.provider");
 
   it("should correctly configure the Google strategy", () => {
     const provider = googleProvider("test", "TEST");

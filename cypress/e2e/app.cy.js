@@ -145,4 +145,17 @@ describe("Authentication Proxy Tests", () => {
         cy.url().should("include", "/login");
         cy.getCookie("_refresh_token").should("not.exist");
     });
+
+    it("should send logged in users to the home page when accessing the login page", () => {
+        cy.login("testuser", "testpassword");
+
+        cy.visit({
+            method: "GET",
+            url: `/login`,
+            failOnStatusCode: false,
+        });
+
+        cy.url().should("include", "/");
+        cy.get("h1").should("contain", "Logged In");
+    });
 });

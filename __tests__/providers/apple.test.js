@@ -1,4 +1,4 @@
-const { stop } = require("../../app");
+const { stop } = require("../../index");
 
 jest.mock("jsonwebtoken", () => ({
   decode: jest.fn().mockReturnValue({
@@ -17,7 +17,7 @@ describe("Apple Authentication Strategy", () => {
   process.env.APPLE_TEST_USER_WHITELIST = "user@example.com";
   process.env.APPLE_TEST_DISPLAY_NAME = "Test Apple";
   process.env.APPLE_TEST_ICON = "test-icon";
-  const appleProvider = require("../../src/providers/apple");
+  const appleProvider = require("../../src/app/providers/apple.provider");
 
   it("should correctly configure the Apple strategy", () => {
     const provider = appleProvider("test", "TEST");

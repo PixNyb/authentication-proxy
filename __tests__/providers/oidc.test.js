@@ -1,4 +1,4 @@
-const { stop } = require("../../app");
+const { stop } = require("../../index");
 
 jest.mock("jsonwebtoken");
 
@@ -14,7 +14,7 @@ describe("OAuth2 Authentication Strategy", () => {
   process.env.OIDC_TEST_USER_WHITELIST = "user@example.com";
   process.env.OIDC_TEST_DISPLAY_NAME = "Test OIDC";
   process.env.OIDC_TEST_ICON = "fas fa-test";
-  const oidcProvider = require("../../src/providers/oidc");
+  const oidcProvider = require("../../src/app/providers/oidc.provider");
 
   it("should correctly configure the OIDC strategy", () => {
     const provider = oidcProvider("test", "TEST");

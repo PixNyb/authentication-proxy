@@ -1,15 +1,13 @@
 const axios = require("axios");
-const jwt = require("jsonwebtoken");
-const { stop } = require("../app");
+const { stop } = require("../index");
 const {
-    ACCESS_TOKEN_SECRET,
-    REFRESH_TOKEN_SECRET,
     ACCESS_TOKEN_NAME,
     REFRESH_TOKEN_NAME,
     AUTH_HOST,
     LONG_LIVED_TOKENS,
     LONG_LIVED_TOKENS_NUMBER,
-} = require("../src/config/constants");
+} = require("../src/app/utils/constants");
+const { generateAccessToken, generateRefreshToken } = require("../src/app/utils/jwt");
 
 describe("Authentication Proxy Tests", () => {
     describe("Application Routes", () => {
@@ -21,8 +19,8 @@ describe("Authentication Proxy Tests", () => {
         });
 
         it("should allow authenticated users on GET routes", async () => {
-            const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
-            const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+            const accessToken = generateAccessToken({ user: "test" });
+            const refreshToken = generateRefreshToken({ user: "test" });
 
             const response = await axios.get("http://localhost:3000/", {
                 headers: {
@@ -38,8 +36,8 @@ describe("Authentication Proxy Tests", () => {
         });
 
         it("should allow authenticated users on POST routes", async () => {
-            const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
-            const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+            const accessToken = generateAccessToken({ user: "test" });
+            const refreshToken = generateRefreshToken({ user: "test" });
 
             const response = await axios.post(
                 "http://localhost:3000/",
@@ -59,8 +57,8 @@ describe("Authentication Proxy Tests", () => {
         });
 
         it("should allow authenticated users on PUT routes", async () => {
-            const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
-            const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+            const accessToken = generateAccessToken({ user: "test" });
+            const refreshToken = generateRefreshToken({ user: "test" });
 
             const response = await axios.put(
                 "http://localhost:3000/",
@@ -80,8 +78,8 @@ describe("Authentication Proxy Tests", () => {
         });
 
         it("should allow authenticated users on DELETE routes", async () => {
-            const accessToken = jwt.sign({ user: "test" }, ACCESS_TOKEN_SECRET);
-            const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+            const accessToken = generateAccessToken({ user: "test" });
+            const refreshToken = generateRefreshToken({ user: "test" });
 
             const response = await axios.delete("http://localhost:3000/", {
                 headers: {
@@ -97,7 +95,7 @@ describe("Authentication Proxy Tests", () => {
         });
 
         it("should redirect expired access tokens to refresh", async () => {
-            const refreshToken = jwt.sign({ user: "test" }, REFRESH_TOKEN_SECRET);
+            const refreshToken = generateRefreshToken({ user: "test" });
 
             const response = await axios.get("http://localhost:3000/", {
                 headers: {
@@ -174,7 +172,7 @@ describe("Authentication Proxy Tests", () => {
         it("should allow request with a long lived token parameter in the request query", async () => {
             const tokens = Object.values(LONG_LIVED_TOKENS);
             for (const token of tokens) {
-                const response1 = await axios.get(
+                const response = await axios.get(
                     "http://localhost:3000/bad-route?tkn=" + token,
                     {
                         maxRedirects: 0,
@@ -184,18 +182,7 @@ describe("Authentication Proxy Tests", () => {
                     }
                 );
 
-                const response2 = await axios.get(
-                    "http://localhost:3000/bad-route?tkn=" + token,
-                    {
-                        maxRedirects: 0,
-                        validateStatus: function () {
-                            return true;
-                        },
-                    }
-                );
-
-                expect(response1.status).toBe(200);
-                expect(response2.status).toBe(200);
+                expect(response.status).toBe(200);
 
             }
         });

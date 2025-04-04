@@ -1,4 +1,4 @@
-const { stop } = require("../../app");
+const { stop } = require("../../index");
 
 jest.mock("jsonwebtoken");
 
@@ -12,7 +12,7 @@ describe("OAuth2 Authentication Strategy", () => {
   process.env.OAUTH2_TEST_USER_WHITELIST = "user@example.com";
   process.env.OAUTH2_TEST_DISPLAY_NAME = "Test OAuth2";
   process.env.OAUTH2_TEST_ICON = "test-icon";
-  const oauth2Provider = require("../../src/providers/oauth2");
+  const oauth2Provider = require("../../src/app/providers/oauth2.provider");
 
   it("should correctly configure the OAuth2 strategy", () => {
     const provider = oauth2Provider("test", "TEST");

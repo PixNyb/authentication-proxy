@@ -1,4 +1,4 @@
-const { stop } = require("../../app");
+const { stop } = require("../../index");
 
 jest.mock("passport-ldapauth");
 
@@ -11,7 +11,7 @@ describe("LDAP Authentication Strategy", () => {
   process.env.LDAP_LDAP_SEARCH_FILTER = "(uid={{username}})";
   process.env.LDAP_LDAP_DISPLAY_NAME = "Test LDAP";
   process.env.LDAP_LDAP_ICON = "fas fa-user";
-  const ldapProvider = require("../../src/providers/ldap");
+  const ldapProvider = require("../../src/app/providers/ldap.provider");
 
   it("should correctly configure the LDAP strategy", () => {
     const provider = ldapProvider("ldap", "LDAP");
