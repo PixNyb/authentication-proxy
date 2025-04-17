@@ -24,9 +24,19 @@ function generateTokens() {
   return tokens;
 }
 
+const normalizeHost = (host) => {
+  if (!host) return "localhost";
+  try {
+    const url = new URL(host.includes("://") ? host : `http://${host}`);
+    return url.port ? `${url.hostname}:${url.port}` : url.hostname;
+  } catch {
+    return "localhost";
+  }
+};
+
 module.exports = {
   AUTH_PREFIX: process.env.AUTH_PREFIX || "",
-  AUTH_HOST: process.env.AUTH_HOST || "localhost",
+  AUTH_HOST: normalizeHost(process.env.AUTH_HOST || "localhost"),
   SESSION_SECRET: process.env.SESSION_SECRET || crypto.randomBytes(64).toString("hex"),
 
   // JWT tokens
@@ -45,8 +55,8 @@ module.exports = {
   },
 
   COOKIE_HOSTS: process.env.COOKIE_HOSTS
-    ? process.env.COOKIE_HOSTS.split(",")
-    : [process.env.AUTH_HOST || "localhost"],
+    ? process.env.COOKIE_HOSTS.split(",").map(normalizeHost)
+    : [normalizeHost(process.env.AUTH_HOST || "localhost")],
   COOKIE_HOSTS_USE_ROOT:
     parseBoolean(process.env.COOKIE_HOSTS_USE_ROOT) || false,
   COOKIE_MODIFY_SECRET:
