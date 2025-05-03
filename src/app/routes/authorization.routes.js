@@ -35,7 +35,8 @@ router.route('/refresh').get(async (req, res) => {
 
         setLoginCookies(req, res,
             decoded.user,
-            decoded.strategy
+            decoded.strategy,
+            getRedirectUrl(req),
         );
     } catch (err) {
         console.error(err);
