@@ -123,6 +123,30 @@ describe("Authentication Proxy Tests", () => {
         });
     });
 
+    it("should redirect to the proper URL after refresh", () => {
+        const forwardedHost = "example.com";
+        const forwardedUri = "/some/path";
+
+        cy.login("testuser", "testpassword");
+        cy.getCookie("_access_token").should("exist");
+        cy.getCookie("_refresh_token").should("exist");
+        cy.setCookie("_access_token", "expired_token");
+
+        cy.visit({
+            method: "GET",
+            url: `/`,
+            failOnStatusCode: false,
+            headers: {
+                "x-forwarded-host": forwardedHost,
+                "x-forwarded-uri": forwardedUri,
+            }
+        });
+
+        cy.origin(`http://${forwardedHost}`, () => {
+            cy.url().should("include", `http://example.com/some/path`);
+        });
+    });
+
     it("should handle missing refresh token gracefully", () => {
         cy.visit({
             method: "GET",
