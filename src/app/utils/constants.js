@@ -35,6 +35,7 @@ const normalizeHost = (host) => {
 };
 
 module.exports = {
+  NODE_ENV: process.env.NODE_ENV || "development",
   AUTH_PREFIX: process.env.AUTH_PREFIX || "",
   AUTH_HOST: normalizeHost(process.env.AUTH_HOST || "localhost"),
   SESSION_SECRET: process.env.SESSION_SECRET || crypto.randomBytes(64).toString("hex"),
@@ -46,6 +47,7 @@ module.exports = {
   REFRESH_TOKEN_NAME: process.env.REFRESH_TOKEN_NAME || "_refresh_token",
   REFRESH_TOKEN_SECRET: process.env.REFRESH_TOKEN_SECRET || crypto.randomBytes(64).toString("hex"),
   REFRESH_TOKEN_EXPIRATION: process.env.REFRESH_TOKEN_EXPIRATION || "7d",
+  CSRF_SECRET: process.env.CSRF_SECRET || crypto.randomBytes(16).toString("hex"),
 
   COOKIE_CONFIG: {
     httpOnly: true,
@@ -59,6 +61,7 @@ module.exports = {
     : [normalizeHost(process.env.AUTH_HOST || "localhost")],
   COOKIE_HOSTS_USE_ROOT:
     parseBoolean(process.env.COOKIE_HOSTS_USE_ROOT) || false,
+  COOKIE_SECRET: process.env.COOKIE_SECRET || crypto.randomBytes(64).toString("hex"),
   COOKIE_MODIFY_SECRET:
     process.env.COOKIE_MODIFY_SECRET || crypto.randomBytes(64).toString("hex"),
 

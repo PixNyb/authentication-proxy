@@ -16,6 +16,9 @@ RUN npm install
 
 COPY . /app
 
+ENV PORT=3000
+ENV NODE_ENV=production
+
 CMD ["node", "index.js"]
 
 HEALTHCHECK --interval=5s --timeout=5s --start-period=1s --retries=15 CMD curl -f http://localhost:3000/healthz || exit 1

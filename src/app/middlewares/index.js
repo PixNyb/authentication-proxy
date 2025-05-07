@@ -4,6 +4,7 @@ const forwardedHeaderParser = require('./forwarded-header-parser.middleware');
 const longLivedTokensHandler = require('./long-lived-tokens-handler.middleware');
 const requestLogger = require('./request-logger.middleware');
 const userDecoder = require('./user-decoder.middleware');
+const csrfProtectionMiddleware = require('./csrf-protection.middleware');
 
 module.exports = {
     authorizationHandler,
@@ -12,4 +13,5 @@ module.exports = {
     longLivedTokensHandler,
     requestLogger,
     userDecoder,
+    csrfProtectionMiddleware,
 };

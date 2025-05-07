@@ -13,42 +13,44 @@
                 <label for="password">Password</label>
                 <input type="password" id="password" name="password" required>
             </span>
-            <% if (endpoints.length > 1) { %>
+            <% if (endpoints.length> 1) { %>
                 <span class="form-group">
                     <label for="endpoint">Endpoint</label>
                     <select id="endpoint" name="endpoint">
                         <% endpoints.forEach(function(endpoint) { %>
-                            <option value="<%= endpoint.loginURL %>"><%= endpoint.displayName %></option>
-                        <% }); %>
+                            <option value="<%= endpoint.loginURL %>">
+                                <%= endpoint.displayName %>
+                            </option>
+                            <% }); %>
                     </select>
                 </span>
-            <% } %>
-            <span class="form-tools">
-                <button type="button" id="help">Help</button>
-                <button type="submit" style="flex: 1;">Login</button>
-            </span>
+                <% } %>
+                    <span class="form-tools">
+                        <button type="button" id="help">Help</button>
+                        <button type="submit" style="flex: 1;">Login</button>
+                    </span>
         </form>
-    <% } %>
-    <% if (strategies.length > 1) { %>
-        <div class="method-group">
-            <% strategies.forEach(function(strategy) { %>
-                <a href="<%= strategy.loginURL %>">
-                    <div class="method-group__item button" title="Log in with <%= strategy.displayName %>">
-                        <i class="fa <%= strategy.fontAwesomeIcon %>"></i>
-                    </div>
-                </a>
-            <% }); %>
-            <% if (!initialEndpoint) { %>
-                <button type="button" id="help">Help</button>
-            <% } %>
-        </div>
-    <% } %>
-    <!-- If there is no endpoint or strategy, show some text -->
-    <% if (!initialEndpoint && !strategies.length) { %>
-        <p>
-            No login methods are available...
-        </p>
-    <% } %>
+        <% } %>
+            <% if (strategies.length> 1) { %>
+                <div class="method-group">
+                    <% strategies.forEach(function(strategy) { %>
+                        <a href="<%= strategy.loginURL %>">
+                            <div class="method-group__item button" title="Log in with <%= strategy.displayName %>">
+                                <i class="fa <%= strategy.fontAwesomeIcon %>"></i>
+                            </div>
+                        </a>
+                        <% }); %>
+                            <% if (!initialEndpoint) { %>
+                                <button type="button" id="help">Help</button>
+                                <% } %>
+                </div>
+                <% } %>
+                    <!-- If there is no endpoint or strategy, show some text -->
+                    <% if (!initialEndpoint && !strategies.length) { %>
+                        <p>
+                            No login methods are available...
+                        </p>
+                        <% } %>
 </div>
 
 <dialog id="informationPopup">
@@ -81,4 +83,14 @@
         helpButton.addEventListener('click', () => {
             informationPopup.showModal();
         });
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    if (form) {
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '_csrf';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+    }
 </script>

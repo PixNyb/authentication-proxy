@@ -4,10 +4,12 @@ const session = require("express-session");
 const {
   AUTH_PREFIX,
   AUTH_HOST,
-  FORM_DISABLE_CREDITS
+  FORM_DISABLE_CREDITS,
+  NODE_ENV
 } = require("../utils/constants");
 
-module.exports = (err, req, res) => {
+// eslint-disable-next-line no-unused-vars
+module.exports = (err, req, res, next) => {
   console.error(err);
 
   try {
@@ -20,8 +22,9 @@ module.exports = (err, req, res) => {
   }
 
   try {
-    res.status(500).render("error", {
-      title: err.message,
+    res.render("error", {
+      title: err.code || "Oops!",
+      message: NODE_ENV === "development" && err.message ? err.message : "Something went wrong",
       stack: err.stack,
       url: `${req.protocol}://${req.headers.host}${req.forwardedUri || req.url}`.split("?")[0],
       back_url:

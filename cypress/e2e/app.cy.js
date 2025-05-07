@@ -1,14 +1,16 @@
 /* eslint-disable no-undef */
-describe("Authentication Proxy Tests", () => {
-    beforeEach(() => {
-        cy.clearCookies();
-    });
-
+describe("Health Checks", () => {
     it("should load the health check endpoint", () => {
         cy.request(`/healthz`).then((response) => {
             expect(response.status).to.eq(200);
             expect(response.body).to.eq("OK");
         });
+    });
+});
+
+describe("Login Functionality", () => {
+    beforeEach(() => {
+        cy.clearCookies();
     });
 
     it("should render login form when no tokens are present", () => {
@@ -28,44 +30,6 @@ describe("Authentication Proxy Tests", () => {
         cy.get("#login button[type=submit]").should("exist");
     });
 
-    it("should add a redirect_url query parameter if present", () => {
-        const forwardedHost = "example.com";
-        const forwardedUri = "/some/path";
-
-        const redirectUrl = `http://${forwardedHost}${forwardedUri}`;
-
-        cy.visit({
-            method: "GET",
-            url: `/`,
-            headers: {
-                "x-forwarded-host": forwardedHost,
-                "x-forwarded-uri": forwardedUri,
-            }
-        })
-
-        cy.url().should("include", "/login");
-        cy.url().should("include", `redirect_url=${encodeURIComponent(redirectUrl)}`);
-    });
-
-    it("should go to refresh endpoint when access token is invalid", () => {
-        cy.login("testuser", "testpassword");
-        cy.getCookie("_access_token").should("exist");
-        cy.getCookie("_refresh_token").should("exist");
-        cy.clearCookie("_access_token");
-        cy.getCookie("_access_token").should("not.exist");
-
-        cy.visit({
-            method: "GET",
-            url: `/`,
-            failOnStatusCode: false,
-        });
-
-        cy.get("h1").should("contain", "Logged In");
-        cy.getCookie("_access_token").should("exist");
-        cy.getCookie("_refresh_token").should("exist");
-        cy.url().should("include", "/");
-    });
-
     it("should log in successfully using preset username and password", () => {
         cy.login("testuser", "testpassword");
 
@@ -82,9 +46,30 @@ describe("Authentication Proxy Tests", () => {
         cy.url().should("include", `error=${encodeURIComponent("Invalid credentials")}`);
         cy.get("h1").should("contain", "Login");
 
-        // Also check if it's actually rendered
         cy.get(".error__message").should("exist");
         cy.get(".error__message").should("contain", "Invalid credentials");
+    });
+
+    it("should redirect to the proper URL after login", () => {
+        cy.visit({
+            method: "GET",
+            url: `/login?redirect_url=${encodeURIComponent("http://example.com/some/path")}`,
+            failOnStatusCode: false,
+        });
+
+        cy.get("input[name=username]").type("testuser");
+        cy.get("input[name=password]").type("testpassword");
+        cy.get("#login button[type=submit]").click();
+
+        cy.origin("http://example.com", () => {
+            cy.url().should("include", "http://example.com/some/path");
+        });
+    });
+});
+
+describe("Logout Functionality", () => {
+    beforeEach(() => {
+        cy.clearCookies();
     });
 
     it("should log out successfully", () => {
@@ -106,21 +91,26 @@ describe("Authentication Proxy Tests", () => {
         cy.getCookie("_access_token").should("not.exist");
         cy.getCookie("_refresh_token").should("not.exist");
     });
+});
 
-    it("should redirect to the proper URL after login", () => {
+describe("Token Handling", () => {
+    it("should go to refresh endpoint when access token is invalid", () => {
+        cy.login("testuser", "testpassword");
+        cy.getCookie("_access_token").should("exist");
+        cy.getCookie("_refresh_token").should("exist");
+        cy.clearCookie("_access_token");
+        cy.getCookie("_access_token").should("not.exist");
+
         cy.visit({
             method: "GET",
-            url: `/login?redirect_url=${encodeURIComponent("http://example.com/some/path")}`,
+            url: `/`,
             failOnStatusCode: false,
         });
 
-        cy.get("input[name=username]").type("testuser");
-        cy.get("input[name=password]").type("testpassword");
-        cy.get("#login button[type=submit]").click();
-
-        cy.origin("http://example.com", () => {
-            cy.url().should("include", "http://example.com/some/path");
-        });
+        cy.get("h1").should("contain", "Logged In");
+        cy.getCookie("_access_token").should("exist");
+        cy.getCookie("_refresh_token").should("exist");
+        cy.url().should("include", "/");
     });
 
     it("should redirect to the proper URL after refresh", () => {
@@ -181,5 +171,43 @@ describe("Authentication Proxy Tests", () => {
 
         cy.url().should("include", "/");
         cy.get("h1").should("contain", "Logged In");
+    });
+
+    it("should add a redirect_url query parameter if present", () => {
+        const forwardedHost = "example.com";
+        const forwardedUri = "/some/path";
+
+        const redirectUrl = `http://${forwardedHost}${forwardedUri}`;
+
+        cy.visit({
+            method: "GET",
+            url: `/`,
+            headers: {
+                "x-forwarded-host": forwardedHost,
+                "x-forwarded-uri": forwardedUri,
+            }
+        })
+
+        cy.url().should("include", "/login");
+        cy.url().should("include", `redirect_url=${encodeURIComponent(redirectUrl)}`);
+    });
+});
+
+describe('CSRF Protection', () => {
+    it('should reject login requests with invalid CSRF token', () => {
+        cy.visit({
+            method: "GET",
+            url: `/login`,
+            failOnStatusCode: false,
+        });
+
+        cy.get("input[name=username]").type("testuser");
+        cy.get("input[name=password]").type("testpassword");
+
+        cy.get('input[name="_csrf"]').invoke('val', 'invalid_csrf_token');
+
+        cy.get("#login button[type=submit]").click();
+
+        cy.get("h1").should("contain", "Oops!");
     });
 });

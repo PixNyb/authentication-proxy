@@ -1,11 +1,12 @@
 const express = require('express');
 const expressEjsLayouts = require('express-ejs-layouts');
 const helmet = require('helmet');
-const promBundle = require('express-prom-bundle');
 const session = require('express-session');
+const FileStore = require('session-file-store')(session);
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const passport = require('./passport/setup');
+const { csrfProtectionMiddleware } = require('./middlewares');
 
 const {
     authorizationHandler: authorizationHandlerMiddleware,
@@ -22,7 +23,7 @@ const {
     health: healthRoutes,
     provider: providerRoutes,
 } = require('./routes');
-const { AUTH_HOST, SESSION_SECRET, LONG_LIVED_TOKENS_ENABLED, AUTH_PREFIX } = require('./utils/constants');
+const { AUTH_HOST, SESSION_SECRET, LONG_LIVED_TOKENS_ENABLED, AUTH_PREFIX, COOKIE_SECRET, COOKIE_CONFIG } = require('./utils/constants');
 
 const app = express();
 
@@ -43,23 +44,26 @@ app.use(
     })
 );
 
-app.use(
-    promBundle({
-        includePath: true,
-        includeMethod: true,
-        metricsPath: '/metrics',
-    })
-);
-
 app.use(express.json());
-app.use(cookieParser());
+app.use(cookieParser(COOKIE_SECRET));
 app.use(bodyParser.urlencoded({ extended: false }));
 
 app.use(
     session({
+        store: new FileStore({
+            path: '/tmp/sessions',
+            ttl: 86400,
+            retries: 0,
+        }),
         secret: SESSION_SECRET,
         resave: false,
-        saveUninitialized: true,
+        saveUninitialized: false,
+        cookie: {
+            secure: COOKIE_CONFIG.secure,
+            httpOnly: COOKIE_CONFIG.httpOnly,
+            sameSite: COOKIE_CONFIG.sameSite,
+            maxAge: 86400000,
+        },
     })
 );
 
@@ -75,7 +79,7 @@ app.use(requestLoggerMiddleware);
 if (LONG_LIVED_TOKENS_ENABLED) app.use(longLivedTokensHandlerMiddleware);
 
 app.use(AUTH_PREFIX, authorizationRoutes);
-app.use(AUTH_PREFIX, cookieRoutes);
+app.use(AUTH_PREFIX, csrfProtectionMiddleware, cookieRoutes);
 app.use(providerRoutes);
 
 app.use(authorizationHandlerMiddleware);

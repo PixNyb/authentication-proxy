@@ -68,7 +68,6 @@ As mentioned above, there are a few environment variables that can be used to co
 | FORM_TITLE                | The title of the login form                                                                           | `Login`          |
 | FORM_ADMIN_EMAIL          | The email address of the administrator, this will be shown in the help dialog                         |                  |
 | FORM_DISABLE_CREDITS      | Whether the credits should be disabled or not                                                         | `false`          |
-| PROMETHEUS_PREFIX         | The prefix for the Prometheus metrics endpoint. Since this route is not secured, it should be random  |                  |
 
 > [!NOTE]
 > The `(ACCESS|REFRESH)_TOKEN_EXPIRATION` variables should be in the format `<duration><unit>`, where `<duration>` is a number and `<unit>` is one of `s`, `m`, `h`, `d`.
@@ -76,9 +75,6 @@ As mentioned above, there are a few environment variables that can be used to co
 > [!NOTE]
 > The `LONG_LIVED_TOKENS` variable should be in the format `name:token,name:token`. These tokens can be found after logging in to the auth service and visiting the `AUTH_HOST`.
 > ![LONG_LIVED_TOKENS](docs/images/long-lived-tokens.png)
-
-> [!WARNING]
-> The Prometheus metrics endpoint will always end in `/metrics`. The prefix is used to obfuscate the endpoint. (e.g. `/random-token` -> `/random-token/metrics`)
 
 The proxy login form will change based on the authentication methods that are configured. The form will show a list of buttons for each configured provider, as well as a username and password field for the local provider.
 
@@ -180,6 +176,19 @@ The LDAP provider is used to authenticate users against an LDAP server.
 | \_BIND_CREDENTIALS | The bind credentials for the LDAP server |         |
 | \_SEARCH_BASE      | The search base for the LDAP server      |         |
 | \_SEARCH_FILTER    | The search filter for the LDAP server    |         |
+
+### Metrics
+
+The authentication proxy exposes metrics in the Prometheus format on `*:9100/metrics`. This can be used to monitor the authentication proxy and track the number of successful and failed logins. The following metrics are exposed:
+
+| Metric                                   | Description                                                     | Labels               |
+| ---------------------------------------- | --------------------------------------------------------------- | -------------------- |
+| `auth_proxy_unauthorized_requests_total` | The number of unauthorized requests to the authentication proxy | `host`, `path`       |
+| `auth_proxy_authorized_requests_total`   | The number of authorized requests to the authentication proxy   | `host`, `path`       |
+| `auth_proxy_login_requests_total`        | The number of login requests to the authentication proxy        | `provider`, `status` |
+| `auth_proxy_logout_requests_total`       | The number of logout requests to the authentication proxy       | `status`             |
+| `auth_proxy_refresh_requests_total`      | The number of refresh requests to the authentication proxy      | `status`             |
+| `auth_proxy_token_requests_total`        | The number of token requests to the authentication proxy        | `token`, `status`    |
 
 ## Contributing
 

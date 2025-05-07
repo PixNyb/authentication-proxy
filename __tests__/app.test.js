@@ -122,17 +122,26 @@ describe("Authentication Proxy Tests", () => {
         });
 
         it("should return a 401 for all request that cannot be authenticated or properly redirected", async () => {
-            const response = await axios.get("http://localhost:3000/bad-route", {
+            const response = await axios.get("http://localhost:3000/", {
+                headers: {
+                    "X-Fowarded-Host": "example.com",
+                    "X-Forwarded-Uri": "/test",
+                },
                 maxRedirects: 0,
                 validateStatus: function () {
                     return true;
                 },
             });
-            expect(response.status).toBe(401);
+            expect(response.status).toBe(302);
 
             const response2 = await axios.post(
-                "http://localhost:3000/bad-route",
-                {},
+                "http://localhost:3000/",
+                {
+                    headers: {
+                        "X-Fowarded-Host": "example.com",
+                        "X-Forwarded-Uri": "/test",
+                    },
+                },
                 {
                     maxRedirects: 0,
                     validateStatus: function () {
@@ -143,9 +152,13 @@ describe("Authentication Proxy Tests", () => {
             expect(response2.status).toBe(401);
 
             const response3 = await axios.put(
-                "http://localhost:3000/bad-route",
+                "http://localhost:3000/",
                 {},
                 {
+                    headers: {
+                        "X-Fowarded-Host": "example.com",
+                        "X-Forwarded-Uri": "/test",
+                    },
                     maxRedirects: 0,
                     validateStatus: function () {
                         return true;
@@ -154,7 +167,11 @@ describe("Authentication Proxy Tests", () => {
             );
             expect(response3.status).toBe(401);
 
-            const response4 = await axios.delete("http://localhost:3000/bad-route", {
+            const response4 = await axios.delete("http://localhost:3000/", {
+                headers: {
+                    "X-Fowarded-Host": "example.com",
+                    "X-Forwarded-Uri": "/test",
+                },
                 maxRedirects: 0,
                 validateStatus: function () {
                     return true;
@@ -173,8 +190,12 @@ describe("Authentication Proxy Tests", () => {
             const tokens = Object.values(LONG_LIVED_TOKENS);
             for (const token of tokens) {
                 const response = await axios.get(
-                    "http://localhost:3000/bad-route?tkn=" + token,
+                    "http://localhost:3000/",
                     {
+                        headers: {
+                            "X-Fowarded-Host": "example.com",
+                            "X-Forwarded-Uri": "/test?tkn=" + token,
+                        },
                         maxRedirects: 0,
                         validateStatus: function () {
                             return true;
@@ -191,7 +212,7 @@ describe("Authentication Proxy Tests", () => {
             const tokens = Object.values(LONG_LIVED_TOKENS);
             for (const token of tokens) {
                 const response = await axios.post(
-                    "http://localhost:3000/bad-route",
+                    "http://localhost:3000/",
                     { token: token },
                     {
                         maxRedirects: 0,
@@ -207,7 +228,7 @@ describe("Authentication Proxy Tests", () => {
         it("should allow request with a long lived token in the request header", async () => {
             const tokens = Object.values(LONG_LIVED_TOKENS);
             for (const token of tokens) {
-                const response = await axios.get("http://localhost:3000/bad-route", {
+                const response = await axios.get("http://localhost:3000/", {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },

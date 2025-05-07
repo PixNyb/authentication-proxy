@@ -1,3 +1,4 @@
+const { tokenRequestsCounter } = require("../metrics");
 const { LONG_LIVED_TOKENS } = require("../utils/constants");
 
 module.exports = (req, res, next) => {
@@ -17,8 +18,12 @@ module.exports = (req, res, next) => {
   if (!token) return next();
 
   const tokenExists = Object.values(LONG_LIVED_TOKENS).includes(token);
-  if (tokenExists)
+  if (tokenExists) {
+    let tokenName = Object.keys(LONG_LIVED_TOKENS).find((key) => LONG_LIVED_TOKENS[key] === token);
+    tokenRequestsCounter.inc({ token: tokenName, status: "success" });
     return res.sendStatus(200);
-  else
+  } else {
+    tokenRequestsCounter.inc({ token, status: "failure" });
     return next();
+  }
 };

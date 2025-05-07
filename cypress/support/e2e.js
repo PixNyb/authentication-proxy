@@ -50,3 +50,18 @@ Cypress.Commands.add("setAccessToken", (token) => {
 Cypress.Commands.add("setRefreshToken", (token) => {
     cy.setCookie("_refresh_token", token);
 });
+
+/**
+ * Gets a valid CSRF token by loading the login page.
+ */
+Cypress.Commands.add("getCsrfToken", () => {
+    cy.visit({
+        url: `/login`,
+        method: "GET",
+        failOnStatusCode: false,
+    });
+
+    return cy.get("meta[name='csrf-token']").then(($meta) => {
+        return $meta.attr("content");
+    });
+});
