@@ -12,7 +12,8 @@ const {
     FORM_ADMIN_TEXT,
     FORM_DISABLE_CREDITS,
     LONG_LIVED_TOKENS_ENABLED,
-    LONG_LIVED_TOKENS
+    LONG_LIVED_TOKENS,
+    RBAC_ENABLED
 } = require("../utils/constants");
 const { setLoginCookies, clearLoginCookies } = require("../utils/cookies");
 const { refreshCounter, logoutCounter, unauthorizedRequestsCounter, authorizedRequestsCounter } = require("../metrics");
@@ -109,6 +110,8 @@ router.route('/').all((req, res) => {
         longLivedTokensEnabled: LONG_LIVED_TOKENS_ENABLED,
         longLivedTokens: LONG_LIVED_TOKENS,
         show_credit: !FORM_DISABLE_CREDITS,
+        rbacEnabled: RBAC_ENABLED,
+        user: req.user
     });
 });
 

@@ -80,5 +80,17 @@ module.exports = {
   LONG_LIVED_TOKENS_NUMBER: parseInt(process.env.LONG_LIVED_TOKENS_NUMBER) || 6,
   LONG_LIVED_TOKENS: process.env.LONG_LIVED_TOKENS
     ? processTokens(process.env.LONG_LIVED_TOKENS)
-    : generateTokens()
+    : generateTokens(),
+
+  // Role-based access control
+  RBAC_ENABLED: parseBoolean(process.env.RBAC_ENABLED) || false,
+  DEFAULT_ROLE: process.env.DEFAULT_ROLE || "user",
+  ROLES_CONFIG: process.env.ROLES_CONFIG ? JSON.parse(process.env.ROLES_CONFIG) : {
+    "admin": {
+      "permissions": ["*"]
+    },
+    "user": {
+      "permissions": []
+    }
+  },
 };

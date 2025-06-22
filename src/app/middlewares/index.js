@@ -5,6 +5,7 @@ const longLivedTokensHandler = require('./long-lived-tokens-handler.middleware')
 const requestLogger = require('./request-logger.middleware');
 const userDecoder = require('./user-decoder.middleware');
 const csrfProtectionMiddleware = require('./csrf-protection.middleware');
+const permissionCheck = require('./permission-check.middleware');
 
 module.exports = {
     authorizationHandler,
@@ -14,4 +15,5 @@ module.exports = {
     requestLogger,
     userDecoder,
     csrfProtectionMiddleware,
+    permissionCheck,
 };

@@ -15,53 +15,79 @@
 </h1>
 
 <p>
-    You are now logged in, but we didn't know where to redirect you to.<br/>
+    You are now logged in, but we didn't know where to redirect you to.<br />
     Feel free to enter an address on your own.
 </p>
 
-<p>
-    <a href="./logout">Logout</a>
-</p>
+<% if (rbacEnabled && user) { %>
+    <div class="user-info">
+        <h2>User Information</h2>
+        <p><strong>Username:</strong>
+            <%= user.user %>
+        </p>
+        <p><strong>Role:</strong>
+            <%= user.role || 'No Role Assigned' %>
+        </p>
 
-<% if (longLivedTokensEnabled) { %>
-    <hr/>
+        <% if (user.permissions && user.permissions.length> 0) { %>
+            <h3>Permissions:</h3>
+            <ul>
+                <% user.permissions.forEach(function(permission) { %>
+                    <li>
+                        <%= permission %>
+                    </li>
+                    <% }); %>
+            </ul>
+            <% } else { %>
+                <p>No specific permissions assigned.</p>
+                <% } %>
+    </div>
+    <% } %>
 
-    <h2>Access Tokens</h2>
+        <p>
+            <a href="./logout">Logout</a>
+        </p>
 
-    <p>
-        Below are the long-lived access tokens you can use to authenticate in case short-lived tokens are not suitable for your use case.<br/>
-        Tokens will be copied to your clipboard when clicked.
-    </p>
+        <% if (longLivedTokensEnabled) { %>
+            <hr />
 
-    <div class="row">
-        <div class="token-list">
-            <% Object.entries(longLivedTokens).forEach(function([name, token]) { %>
-                <button data-token="<%= token %>">
-                    <%= name %>
-                </button>
-            <% }); %>
-        </div>
-        <div>
-            <pre><code>$ curl -H "Authorization: Bearer <span class="token-placeholder">TOKEN</span>" https://example.com/api/v1/protected
+            <h2>Access Tokens</h2>
+
+            <p>
+                Below are the long-lived access tokens you can use to authenticate in case short-lived tokens are not
+                suitable for your use case.<br />
+                Tokens will be copied to your clipboard when clicked.
+            </p>
+
+            <div class="row">
+                <div class="token-list">
+                    <% Object.entries(longLivedTokens).forEach(function([name, token]) { %>
+                        <button data-token="<%= token %>">
+                            <%= name %>
+                        </button>
+                        <% }); %>
+                </div>
+                <div>
+                    <pre><code>$ curl -H "Authorization: Bearer <span class="token-placeholder">TOKEN</span>" https://example.com/api/v1/protected
 
 $ curl https://example.com/api/v1/protected?tkn=<span class="token-placeholder">TOKEN</span>
 
 $ curl -X POST https://example.com/api/v1/protected -d "token=<span class="token-placeholder">TOKEN</span>"</code></pre>
-        </div>
-    </div>
-<% } %>
+                </div>
+            </div>
+            <% } %>
 
-<script>
-    // const placeholders = document.querySelectorAll('.token-placeholder');
-    const buttons = document.querySelectorAll('button[data-token]');
+                <script>
+                    // const placeholders = document.querySelectorAll('.token-placeholder');
+                    const buttons = document.querySelectorAll('button[data-token]');
 
-    buttons.forEach(function(button) {
-        button.addEventListener('click', function() {
-            // placeholders.forEach(function(placeholder) {
-            //     placeholder.textContent = button.getAttribute('data-token');
-            // });
+                    buttons.forEach(function (button) {
+                        button.addEventListener('click', function () {
+                            // placeholders.forEach(function(placeholder) {
+                            //     placeholder.textContent = button.getAttribute('data-token');
+                            // });
 
-            navigator.clipboard.writeText(button.getAttribute('data-token'));
-        });
-    });
-</script>
+                            navigator.clipboard.writeText(button.getAttribute('data-token'));
+                        });
+                    });
+                </script>

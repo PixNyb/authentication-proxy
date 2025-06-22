@@ -4,6 +4,9 @@ const fs = require("fs");
 let strategies = [];
 let templateStrategies = [];
 let localEndpoints = [];
+let rolePermissionsMap = {}; // Map of roles to their permissions
+
+const { RBAC_ENABLED, ROLES_CONFIG } = require("../utils/constants");
 
 /**
  * Initialize the strategies by loading provider files and setting up strategies.
@@ -17,6 +20,11 @@ const initializeStrategies = () => {
 
     const normalizeStrategyName = (name) =>
         name.toLowerCase().replace(/[^a-z0-9]/g, "-");
+
+    // If RBAC is enabled, initialize the role-permissions map
+    if (RBAC_ENABLED && ROLES_CONFIG) {
+        rolePermissionsMap = ROLES_CONFIG;
+    }
 
     Object.keys(process.env).forEach((key) => {
         const [strategy, id] = key.split("_");
@@ -34,6 +42,20 @@ const initializeStrategies = () => {
                     normalizedStrategyId,
                     id
                 );
+
+                // Add role mapping if provided in environment variables
+                const roleMapping = process.env[`${strategy}_${id}_ROLES`];
+                if (RBAC_ENABLED && roleMapping) {
+                    try {
+                        strategies[normalizedStrategyId].roleMapping = JSON.parse(
+                            roleMapping
+                        );
+                    } catch (e) {
+                        console.error(
+                            `Error parsing role mapping for ${strategy}_${id}: ${e.message}`
+                        );
+                    }
+                }
             }
         }
     });
@@ -73,9 +95,55 @@ const getTemplateStrategies = () => templateStrategies;
  */
 const getLocalEndpoints = () => localEndpoints;
 
+/**
+ * Get the role permissions map.
+ * @returns {Object} - The role permissions map.
+ */
+const getRolePermissionsMap = () => rolePermissionsMap;
+
+/**
+ * Map a user's identity to a role based on strategy configuration.
+ * @param {string} strategy - The strategy identifier.
+ * @param {Object} profile - The user profile from authentication.
+ * @returns {string} - The assigned role.
+ */
+const mapUserToRole = (strategy, profile) => {
+    if (!RBAC_ENABLED) return null;
+
+    const strategyConfig = strategies[strategy];
+    if (!strategyConfig || !strategyConfig.roleMapping) {
+        return process.env.DEFAULT_ROLE || "user";
+    }
+
+    // Check if there's a specific role mapping for this user
+    for (const [roleKey, mapping] of Object.entries(strategyConfig.roleMapping)) {
+        if (mapping.type === "email" && mapping.pattern && profile.email) {
+            // Email pattern matching
+            const regex = new RegExp(mapping.pattern);
+            if (regex.test(profile.email)) {
+                return roleKey;
+            }
+        } else if (
+            mapping.type === "attribute" &&
+            mapping.attribute &&
+            mapping.value
+        ) {
+            // Attribute exact matching
+            if (profile[mapping.attribute] === mapping.value) {
+                return roleKey;
+            }
+        }
+    }
+
+    // Use default role if no mapping matched
+    return process.env.DEFAULT_ROLE || "user";
+};
+
 module.exports = {
     initializeStrategies,
     getStrategies,
     getTemplateStrategies,
     getLocalEndpoints,
+    getRolePermissionsMap,
+    mapUserToRole,
 };
