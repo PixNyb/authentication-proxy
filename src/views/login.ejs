@@ -34,7 +34,8 @@
             <% if (strategies.length> 1) { %>
                 <div class="method-group">
                     <% strategies.forEach(function(strategy) { %>
-                        <a href="<%= strategy.loginURL %>">
+                        <a
+                            href="<%= strategy.loginURL %><%= typeof redirect_url !== 'undefined' && redirect_url ? '?redirect_url=' + encodeURIComponent(redirect_url) : '' %>">
                             <div class="method-group__item button" title="Log in with <%= strategy.displayName %>">
                                 <i class="fa <%= strategy.fontAwesomeIcon %>"></i>
                             </div>

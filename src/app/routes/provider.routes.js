@@ -27,7 +27,15 @@ Object.entries(strategies).forEach(([name, strategyConfig]) => {
 
         router.route(loginURL).get(csrfProtectionMiddleware, (req, res, next) => {
             try {
-                passport.authenticate(name)(req, res, next);
+                // Preserve redirect URL by passing it through OAuth state parameter
+                const redirectUrl = req.query.redirect_url || req.session.redirect_url;
+                const authOptions = {};
+
+                if (redirectUrl && (strategyConfig.type === 'oauth2' || strategyConfig.type === 'oidc' || strategyConfig.type === 'google' || strategyConfig.type === 'apple')) {
+                    authOptions.state = Buffer.from(JSON.stringify({ redirect_url: redirectUrl })).toString('base64');
+                }
+
+                passport.authenticate(name, authOptions)(req, res, next);
             } catch (err) {
                 return next(err);
             }
@@ -77,7 +85,22 @@ Object.entries(strategies).forEach(([name, strategyConfig]) => {
                 }
 
                 let redirectUrl = `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/`;
-                if (req.session && req.session.redirect_url) {
+
+                // Try to get redirect URL from OAuth state parameter first
+                if (req.query.state) {
+                    try {
+                        const stateData = JSON.parse(Buffer.from(req.query.state, 'base64').toString());
+                        if (stateData.redirect_url) {
+                            redirectUrl = stateData.redirect_url;
+                        }
+                    } catch (e) {
+                        // If state parsing fails, fall back to session
+                        console.warn('Failed to parse OAuth state parameter:', e);
+                    }
+                }
+
+                // Fallback to session if state doesn't contain redirect URL
+                if (redirectUrl === `${req.protocol}://${AUTH_HOST}${AUTH_PREFIX}/` && req.session && req.session.redirect_url) {
                     redirectUrl = req.session.redirect_url;
                     delete req.session.redirect_url;
                 }

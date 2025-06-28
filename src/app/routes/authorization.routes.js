@@ -60,7 +60,8 @@ router.route('/logout').get(csrfProtectionMiddleware, (req, res) => {
 router.route('/login').get(csrfProtectionMiddleware, (req, res) => {
     if (req.user) return redirect(res, addRedirectQuery(req, `/`));
 
-    req.session.redirect_url = getRedirectUrl(req);
+    const redirectUrl = getRedirectUrl(req);
+    req.session.redirect_url = redirectUrl;
 
     if (AUTH_HOST && req.headers.host !== AUTH_HOST)
         return redirect(res, addRedirectQuery(req, `/login`));
@@ -73,6 +74,7 @@ router.route('/login').get(csrfProtectionMiddleware, (req, res) => {
         endpoints: localEndpoints,
         initialEndpoint: localEndpoints[0] ? localEndpoints[0].loginURL : null,
         admin_text: FORM_ADMIN_TEXT,
+        redirect_url: redirectUrl,
         show_credit: !FORM_DISABLE_CREDITS,
     });
 });
