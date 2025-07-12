@@ -60,4 +60,9 @@
    - Configuration hot-reloading
    - Configuration options in the UI(*?)
 
+# Application
+
+1. Application rewrite(?)
+   - Possible rewrite of the application in a more robust language/framework
+
 * Indicates features that will most likely require a storage backend, such as a database or key-value store, to persist data across restarts. Decision on storage backend and if this will be implemented at all is still pending.
