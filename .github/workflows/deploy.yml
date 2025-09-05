@@ -142,6 +142,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
+          provenance: mode=max
+          sbom: true
           tags: |
             ${{ needs.setup.outputs.lowercase }}/authentication-proxy:${{ needs.setup.outputs.tag_name }}
             ghcr.io/${{ needs.setup.outputs.lowercase }}/authentication-proxy:${{ needs.setup.outputs.tag_name }}
