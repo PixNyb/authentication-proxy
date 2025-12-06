@@ -148,5 +148,6 @@ jobs:
           tags: |
             ${{ needs.setup.outputs.lowercase }}/authentication-proxy:${{ needs.setup.outputs.tag_name }}
             ghcr.io/${{ needs.setup.outputs.lowercase }}/authentication-proxy:${{ needs.setup.outputs.tag_name }}
+            nexus.roelc.dev/authentication-proxy:${{ needs.setup.outputs.tag_name }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
